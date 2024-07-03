@@ -5,12 +5,18 @@
 Anggota:
 
 - Edwards Taufiqurrahman
-- Faisal Hamzah
-- A'an Johan Wahyudi
-- Afdal
-- Harmesa
-- Rachma Puspitasari
-- 
+    - A'an Johan Wahyudi
+    - Afdal
+    - Camellia Kusuma Tito
+    - Faisal Hamzah
+    - Hanief Budi Prayitno
+    - Harmesa
+    - Idha Yulia Ikhsani
+    - Ita Wulandari
+    - Lestari
+    - M. Taufik Kaisupy
+    - Rachma Puspitasari
+    - Suci Lastrini
 
 ## Pendahuluan
 
