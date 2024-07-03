@@ -2,6 +2,16 @@
 
 #### Oleh: Kelompok riset IMBeR - PRO BRIN
 
+Anggota:
+
+- Edwards Taufiqurrahman
+- Faisal Hamzah
+- A'an Johan Wahyudi
+- Afdal
+- Harmesa
+- Rachma Puspitasari
+- 
+
 ## Pendahuluan
 
 
