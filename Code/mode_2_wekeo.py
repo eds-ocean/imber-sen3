@@ -1,36 +1,20 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# ## Modul
-# 
-# Modul yang digunakan dalam script ini dapat dilihat pada cell berikut. Jika terdapat pesan error bahwa modul tidak tersedia, dapat dilakukan instalasi terlebih dahulu dengan menggunakan `conda`
-# 
-# ```{python}
-# !conda install <module name>
-# ```
-# 
-# Atau bisa menggunakan `pip`
-# 
-# ```{python}
-# !pip install <module name>
-# ```
-# 
-# Instalasi menggunakan `pip` hendaknya dilakukan jika modul tidak tersedia dalam repository `conda`.
-
-# In[ ]:
+# In[1]:
 
 
-import os, shutil, gc
+import os, shutil, gc, glob
 
 import hda
-from webdav3.client import Client
 from getpass import getpass
 
 import xarray as xr
 import numpy as np
-import cf_xarray
+import cf_xarray, rioxarray
 
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 
 from cdo import *
 cdo = Cdo()
@@ -43,46 +27,36 @@ import colormaps as cmo
 
 from cartopy import crs as ccrs
 from cartopy import feature as cf
-from shapely import geometry
-from shapely.geometry import shape
 
 import zipfile
 
-from rich.jupyter import print
+from rich.jupyter import print as rprint
+from rich.table import Table
 from rich.markdown import Markdown
 
 import warnings
 warnings.filterwarnings('ignore')
 
-#import gc
-#import sys
-#from tqdm.auto import tqdm
-#import json
-#import time
-#import base64
-#import requests
-#from IPython.core.display import HTML
-#import cartopy
+from tqdm.auto import tqdm
 
 
-# In[ ]:
+# In[2]:
 
 
-download_dir = os.path.join(os.path.expanduser('~'),"edskywalker", "downloaded-data")
-result_dir = os.path.join(os.path.expanduser('~'),"edskywalker","processed-data")
+download_dir = os.path.join(os.path.expanduser('~'),"sentinel-3_program","downloaded-data")
+result_dir = os.path.join(os.path.expanduser('~'),"sentinel-3_program","processed-data")
 
 os.makedirs(download_dir, exist_ok=True)
 os.makedirs(result_dir, exist_ok=True)
 
-print(download_dir)
+
+# In[3]:
 
 
-# In[ ]:
-
-
-list_flag_nn = ['LAND', 'INLAND_WATER', 'COASTLINE', 'CLOUD', 'CLOUD_AMBIGUOUS', 'CLOUD_MARGIN', 'INVALID', 'COSMETIC', 'SATURATED', 'SUSPECT', 'HISOLZEN', 'HIGHGLINT', 'SNOW_ICE', 'AC_FAIL', 'WHITECAPS', 'ADJAC', 'RWNEG_O2', 'RWNEG_O3', 'RWNEG_O4', 'RWNEG_O5', 'RWNEG_O6', 'RWNEG_O7', 'RWNEG_O8', 'OCNN_FAIL']
-
-# 'TIDAL', 
+list_flags_common = ['LAND','INLAND_WATER','COASTLINE','CLOUD','CLOUD_AMBIGUOUS','CLOUD_MARGIN','INVALID','COSMETIC','SATURATED','SUSPECT','HISOLZEN','HIGHGLINT','SNOW_ICE']
+list_flags_process = ['AC_FAIL','WHITECAPS','ADJAC','RWNEG_O2','RWNEG_O3','RWNEG_O4','RWNEG_O5','RWNEG_O6','RWNEG_O7','RWNEG_O8']
+list_flags_oc4me = ['OC4ME_FAIL','TIDAL']
+list_flags_ocnn = ['OCNN_FAIL']
 
 def flag_data_fast(list_flag, flag_names, flag_values, flag_data, flag_type='WQSF'):
     flag_bits = np.uint64()
@@ -98,112 +72,206 @@ def flag_data_fast(list_flag, flag_names, flag_values, flag_data, flag_type='WQS
     return (flag_data & flag_bits) > 0			
 
 
-# ## Input `username` dan `password` 
-# 
-# Untuk mengakses data WEKEO, Anda perlu memiliki akun terlebih dahulu. Silakan pelajari mengenai pembuatan akun terlebih dahulu di [sini](https://help.wekeo.eu/en/articles/9389186-how-to-create-a-wekeo-account). 
-
-# In[ ]:
+# In[4]:
 
 
-print("Please enter your [bold u cyan]username[/bold u cyan] and [bold u cyan]password[/bold u cyan]")
+os.system('cls' if os.name == 'nt' else 'clear') 
 
-user = input("Enter your name: ")
-passw = getpass("Enter your password: ")
+intro_md = '''
+# Welcome to Sentinel-3 OLCI Biogeochemical Data Access Program
 
-c = hda.Client(hda.Configuration(user=user, password=passw), progress=True, max_workers=1)
+This program is developed by Edwards Taufiqurrahman and the Integrated Marine Biosphere Research Group, Research Centre for Oceanography, National Research and Innovation Agency, Indonesia.
+
+At first, you will be asked the WEkEO `Username` and `Password` and data that you need. Therefore, before start, please make sure that you have a WEkEO Account (you can create one from this link: [https://www.wekeo.eu/register](https://www.wekeo.eu/register)) and you should already know some information about data that you need.
+
+### Enter your WEkEO Credential
+'''
+
+rprint(Markdown(intro_md))
+
+print()
+
+while True:
+    try:
+        user = input("Enter your WEkEO username: ")
+        passw = getpass("Enter your WEkEO password: ")
+        c = hda.Client(hda.Configuration(user=user, password=passw), progress=True, max_workers=1)
+        print()
+        print(f"Login successfull!. Your token is {c.token}.")
+        break
+    except KeyError:
+        print()
+        print('You entered wrong username and/or password.')
 
 
-# ## Input *Data Query*
-# 
-# Masukkan parameter terkait dengan jenis data yang diinginkan serta lokasi dan waktunya.
-# 
-# `Dataset` adalah dataset-id. Untuk Sentinel-3 OLCI, value yang tersedia adalah sebagai berikut:
-# 
-# - `EO:EUM:DAT:SENTINEL-3:0556` &rarr; **2016-04-25** -- **28-04-2021**
-# - `EO:EUM:DAT:SENTINEL-3:OL_2_WFR___` &rarr; **2021-04-29** -- **2023-12-31**
-# 
-# Sentinel-3 tersedia dalam 2 jenis satelit, `Sentinel-3A` dan `Sentinel-3B`. Jika pilihan ini tidak diisi, pada `query` akan terpilih semua satelit. Perlu dicatat bahwa Sentinel-3B tersedia mulai tanggal **2018-05-18**.
-
-# In[ ]:
+# In[5]:
 
 
+time.sleep(1)
+os.system('cls' if os.name == 'nt' else 'clear') 
 
+sat_md_1 = '''
+### Enter Satellite Parameters
 
+Sentinel-3 is available in two satellites: Sentinel-3A and Sentinel-3B. Please note that Sentinel-3B is only available from 18 May 2018.
 
-# In[ ]:
+The Sentinel-3 dataset in WEkEO available in two time period `EO:EUM:DAT:SENTINEL-3:0556` (2016 - 2021) and `EO:EUM:DAT:SENTINEL-3:OL_2_WFR___` (2021 - recent)
 
+#### Enter the satellite designation (`A` or `B`):
 
-# Satellite parameter
-print(
-    Markdown("Please enter the :artificial_satellite: satellite parameters. For satellite ID, enter `1` to choose `EO:EUM:DAT:SENTINEL-3:0556` and `2` to choose `EO:EUM:DAT:SENTINEL-3:OL_2_WFR___`.")
-)
+- Sentinel-3**A**
+- Sentinel-3**B**
+
+Leave it blank if you want both Sentinel-3A and Sentinel-3B queried.
+
+'''
+
+rprint(Markdown(sat_md_1))
+print()
+
+sat_nm = input("Satellite name: ")
+
+print()
+
+if sat_nm == 'a' or sat_nm == 'A':
+    sat = 'Sentinel-3A'
+    print()
+elif sat_nm == 'b' or sat_nm == 'B':
+    sat = 'Sentinel-3B'
+    print()
+else:
+    sat = ''
+    print()
+
+sat_md_2 = '''
+#### Enter Sentinel-3 dataset ID (`1` or `2`)
+
+1. EO:EUM:DAT:SENTINEL-3:0556
+2. EO:EUM:DAT:SENTINEL-3:OL_2_WFR___
+'''
+
+rprint(Markdown(sat_md_2))
+
+print()
 
 while True:
     sat_id = int(input('Satellite ID: '))
 
     if sat_id == 1:
         dataset_id = 'EO:EUM:DAT:SENTINEL-3:0556'
-        print('Dataset ID: ', dataset_id)
+        print()
         break
     elif sat_id == 2:
         dataset_id = 'EO:EUM:DAT:SENTINEL-3:OL_2_WFR___'
-        print('Dataset ID', dataset_id)
+        print()
         break
     else:
-        print("You put wrong number. Please try again!")
+        print()
+        rprint("You put wrong number. Please try again!")
+
+print()
 
 
-# In[ ]:
+# In[7]:
 
 
-print(
-    Markdown("For satellite name, enter `a` to choose `Sentinel-3A` and `b` to choose `Sentinel-3B`. Leave it blank if you want both Sentinel-3A and Sentinel-3B queried. Please note that Sentinel-3B id only available from 18 May 2018")
-)
+time.sleep(1)
+os.system('cls' if os.name == 'nt' else 'clear') 
 
-sat_nm = input("Satellite name: ")
-
-if sat_nm == 'a':
-    sat = 'Sentinel-3A'
-    print('Satellite: ', sat)
-elif sat_nm == 'b':
-    sat = 'Sentinel-3B'
-    print('Satellite: ', sat)
-else:
-    sat = ''
-    print('Both Sentinel-3A and Sentinel-3B will be queried.')
-
-
-
-# In[ ]:
-
-
+area_md = '''
+Please input your area of interest. The coordinates should be in **decimal format** with minus (`-`) sign for south-of-equator latitude or west-of-greenwich longitude.
+'''
 # Area of interest
-print('Please input your :earth_asia-text: area of interest. The coordinates should be in [bold yellow]decimal format[/bold yellow] with :heavy_minus_sign-text: sign for south-of-equator latitude or west-of-greenwich longitude')
+rprint(Markdown(area_md))
 
-north = input('North point: ') # -6.85
-south = input('South point: ') # -7.95
-west = input('West point: ') # 112.66
-east = input('East point: ') # 114.65
+north = float(input('North point: ')) # -6.85
+south = float(input('South point: ')) # -7.95
+west = float(input('West point: ')) # 112.66
+east = float(input('East point: ')) # 114.65
 
 bbox = [west, south, east, north]
 extent = [west, east, north, south]
 bbox_str = f'{west},{east},{south},{north}' 
 
-bbox_polygon = geometry.Polygon(((west,south), (west,north), (east,north), (east,south)))
+# Create a dummy dataset based on the area of interest
+resolution = 300
+resolution_degrees = resolution / 111320
+
+num_lon = int(np.ceil((east - west) / resolution_degrees)) + 1
+num_lat = int(np.ceil((north - south) / resolution_degrees)) + 1
+
+lon = np.linspace(west, east, num_lon)
+lat = np.linspace(south, north, num_lat)
+
+ds = xr.Dataset(
+    coords={
+        "lon": (["lon"], lon),
+        "lat": (["lat"], lat),
+    }
+)
+
+ds.lat.attrs = {
+    'units' : 'degrees_north',
+    'unit_long' : "Degrees North",
+    'standard_name' : "latitude",
+    'long_name' : "Latitude",
+    'axis' : 'Y'
+}
+
+ds.lon.attrs = {
+    'units' : 'degrees_east',
+    'unit_long' : "Degrees East",
+    'standard_name' : "longitude",
+    'long_name' : "Longitude",
+    'axis' : 'X'
+}
+
+ds["data"] = (["lat", "lon"], np.zeros((num_lat, num_lon)))
+
+ds.rio.write_crs('epsg:4326', inplace=True)
+
+ds.to_netcdf(download_dir + '/grid_data.nc')
+dsinput = download_dir + '/grid_data.nc'
+
+grids = cdo.griddes(input = dsinput)
+
+gridfile = os.path.join(os.getcwd(), 'gridfile.txt') 
+
+with open(gridfile, 'w') as f:
+    print("\n".join(line.strip("'") for line in grids), file = f)
 
 
-# In[ ]:
+# In[8]:
 
+
+time.sleep(1)
+os.system('cls' if os.name == 'nt' else 'clear') 
 
 ## Time of interest
-print("Please input your :spiral_calendar-text: [u]date of interest[/u]. The dates should be in [bold yellow]YYYY-MM-DD[/bold yellow] format.")
+time_md = '''
+### Time of Interest
+
+Please input the start date and end date of your interest. The dates should be in `YYYY-MM-DD` format.
+'''
+
+rprint(Markdown(time_md))
+
 print()
 dtstart = input('Time start: ')
 dtend = input('Time end: ')
 
 
-# In[ ]:
+# In[9]:
 
+
+time.sleep(1)
+os.system('cls' if os.name == 'nt' else 'clear') 
+
+resume_md = '''
+### Data Query
+
+Below is the resume of data query based on your input.
+'''
 
 query = {
   "dataset_id": dataset_id, 
@@ -212,80 +280,163 @@ query = {
   "bbox": bbox,
   "sat": sat,
   "type": "OL_2_WFR___",
-  "timeliness": "NT",
-  "itemsPerPage": 200,
-  "startIndex": 0
+  "timeliness": "NT"
 }
 
+query_tab = Table(title="Search Query")
+query_tab.add_column('Parameter', style='cyan')
+query_tab.add_column('Value', style='bright_green')
 
-# In[ ]:
+for col1, col2 in query.items():
+    query_tab.add_row(str(col1), str(col2))
+
+rprint(Markdown(resume_md))
+rprint(query_tab)
+
+
+# In[10]:
+
+
+time.sleep(1)
+os.system('cls' if os.name == 'nt' else 'clear') 
+
+params_md = '''
+Please select parameters you want to download. 
+
+1. Download geophysical (chlorophyll-a and total suspended matter)
+2. Download water surface reflectances.
+'''
+rprint(Markdown(params_md))
+
+print()
+
+while True:
+    parameters = int(input('Parameters: '))
+
+    if parameters == 1:
+        nick = 'geophysical-data'
+        print()
+        print('Geophysical data will be processed.')
+        break
+    elif parameters == 2:
+        nick = 'optical-data'
+        print()
+        print('Reflectance data will be processed.')
+        break
+    else:
+        print("You put wrong number. Please try again!")
+
+
+# In[11]:
 
 
 search_result = c.search(query)
 print(search_result)
 
 
-# In[ ]:
+# In[12]:
 
 
-from tqdm.auto import tqdm
+for index, result in tqdm(enumerate(search_result.results, start=0), desc="Processing: ", total = len(search_result.results), position=0, leave=False):
+    print(f'Processing data no. {index + 1} started.')
+    file_id = result['id']
 
-for index, res in tqdm(enumerate(search_result.results, start=0), desc='Processed', total=len(search_result.results)):
-    file_id = res['id']
-#    print(index)
-    start = datetime.strptime(res['properties']['startdate'], '%Y-%m-%dT%H:%M:%S%fZ')
-    end = datetime.strptime(res['properties']['enddate'], '%Y-%m-%dT%H:%M:%S%fZ')
-    timestamp = start + (end - start) / 2
-
+    print(f'Downloading data.')
     search_result[index].download()
 
+    start = datetime.strptime(result['properties']['startdate'], '%Y-%m-%dT%H:%M:%S%fZ')
+    end = datetime.strptime(result['properties']['enddate'], '%Y-%m-%dT%H:%M:%S%fZ')
+    timestamp = start + (end - start) / 2
+
     with zipfile.ZipFile(file_id + '.zip', 'r') as zip_ref:
+        print(f'Unzipping data.')
         zip_ref.extractall(download_dir)
-        print(f'Unzipping of product {file_id} finished.')
         os.remove(file_id + '.zip')
 
-    filedir = os.path.join(download_dir, file_id)
-    geo_coords = xr.open_dataset(filedir + '/geo_coordinates.nc')
-    lon = geo_coords.variables['longitude'].data
-    lat = geo_coords.variables['latitude'].data
-
-    flag_file = xr.open_dataset(filedir + '/wqsf.nc')
+    print(f'Selecting and masking data.')
+    
+    geo_coords = xr.open_dataset(os.path.join(download_dir, file_id, 'geo_coordinates.nc'))
+    
+    flag_file = xr.open_dataset(os.path.join(download_dir, file_id, 'wqsf.nc'))
     flag_names = flag_file['WQSF'].flag_meanings.split(' ') #flag names
     flag_vals = flag_file['WQSF'].flag_masks #flag bit values
     flags_data = flag_file.variables['WQSF'].data
-    
-    chlnn = xr.open_dataset(filedir + '/chl_nn.nc')
-    chloc = xr.open_dataset(filedir + '/chl_oc4me.nc')
-    tsmnn = xr.open_dataset(filedir + '/tsm_nn.nc')
-    
-    geo_file = xr.combine_by_coords([chlnn, chloc, tsmnn], join="exact", combine_attrs="drop_conflicts")
-    chl_nn = geo_file.variables['CHL_NN'].data
-
-    ref_file = xr.open_mfdataset(filedir + '/*reflectance.nc')
-    
-    flag_mask = flag_data_fast(list_flag_nn, flag_names, flag_vals, flags_data, flag_type='WQSF') # return a numpy array with selected flags
-    chl_flagged = np.where(flag_mask, np.nan, chl_nn) # return a numpy array of masked chl-a data
-
+        
     dta = xr.Dataset()
+    dta['longitude'] = geo_coords['longitude']
+    dta['latitude'] = geo_coords['latitude']
     
-    dta['longitude'] = xr.DataArray(lon, dims=('rows','columns'))
-    dta['longitude'].attrs = geo_coords['longitude'].attrs
-    dta['latitude'] = xr.DataArray(lat, dims=('rows','columns'))
-    dta['latitude'].attrs = geo_coords['latitude'].attrs
+    geo_coords.close()
+    flag_file.close()
+    gc.collect()
+
+    if parameters == 1:
+        keys = ["chl_nn","tsm_nn","chl_oc4me"]
+        for k in keys:
+            if not k == 'chl_oc4me':
+                list_flags = list_flags_common + list_flags_ocnn
+            else:
+                list_flags = list_flags_common + list_flags_process + list_flags_oc4me
     
-    dta['chl_flag'] = xr.DataArray(chl_flagged, dims=('rows','columns'))
-    dta['chl_flag'].attrs = geo_file['CHL_NN'].attrs
-    dta['chl_nn'] = xr.DataArray(chl_nn, dims=('rows','columns'))
-    dta['chl_nn'].attrs = geo_file['CHL_NN'].attrs
+            ds = xr.open_dataset(os.path.join(download_dir, file_id, f'{k}.nc'))
+            dtarr = ds[str(k.upper())].data
+            flag_mask = flag_data_fast(list_flags, flag_names, flag_vals, flags_data, flag_type='WQSF')
+            
+            flagged = np.where(flag_mask, np.nan, dtarr)
+            
+            dta[str(k)] = xr.DataArray(flagged, dims=('rows','columns'))
+            dta[str(k)].attrs = ds[str(k.upper())].attrs
+    elif parameters == 2:
+        keys = ['Oa01_reflectance','Oa02_reflectance','Oa03_reflectance','Oa04_reflectance','Oa05_reflectance','Oa06_reflectance','Oa07_reflectance','Oa08_reflectance','Oa09_reflectance','Oa10_reflectance','Oa11_reflectance','Oa12_reflectance','Oa16_reflectance','Oa17_reflectance','Oa18_reflectance','Oa21_reflectance']
+        list_flags = list_flags_common + list_flags_process
+        for k in keys:
+            ds = xr.open_dataset(os.path.join(download_dir, file_id, f'{k}.nc'))
+            dtarr = ds[str(k)].data
+            flag_mask = flag_data_fast(list_flags, flag_names, flag_vals, flags_data, flag_type='WQSF')
+            
+            flagged = np.where(flag_mask, np.nan, dtarr)
+            
+            dta[str(k)] = xr.DataArray(flagged, dims=('rows','columns'))
+            dta[str(k)].attrs = ds[str(k)].attrs
     
-    dta = dta.set_coords(['longitude','latitude'])
-    
+    dta = dta.set_coords(['latitude','longitude'])
     dta = dta.expand_dims(dim={"time":[timestamp]}, axis=0)
+    dta = dta.cf.add_bounds(['latitude','longitude'])
 
-    reggridded = cdo.sellonlatbox(bbox_str, input = dta, returnXDataset = True)
-    reggridded.to_netcdf(os.path.join(result_dir , file_id + '.nc'))
+    print(f'Subsetting data.')
 
+    reggrid = cdo.sellonlatbox(bbox_str, input = dta, returnXDataset = True)
+    
+    comp = dict(zlib=True, _FillValue=-99999.0, complevel=4)
+    encoding = {var: comp for var in reggrid.data_vars}
+    
+    reggrid.to_netcdf(
+        os.path.join(download_dir , file_id + f'_{nick}.nc'),
+        format='NETCDF4', 
+        unlimited_dims=['time'],
+        encoding=encoding
+    )
+    
     cdo.cleanTempDir()
+
+    dataset = xr.open_dataset(os.path.join(download_dir , file_id + f'_{nick}.nc'), decode_coords="all")
+
+    reggridded = cdo.remapcon(gridfile, input = dataset, returnXDataset = True)
+    
+    comp = dict(zlib=True, _FillValue=-99999.0, complevel=4)
+    encoding = {var: comp for var in reggridded.data_vars}
+    
+    reggridded.to_netcdf(
+        os.path.join(result_dir , file_id + f'_{nick}.nc'),
+        format='NETCDF4', 
+        unlimited_dims=['time'],
+        encoding=encoding
+    )
+    
+    cdo.cleanTempDir()
+    
+    gc.collect()
+    
     for allitem in os.listdir(download_dir):
         path = os.path.join(download_dir,allitem)
         if os.path.isfile(path):
@@ -293,140 +444,110 @@ for index, res in tqdm(enumerate(search_result.results, start=0), desc='Processe
         elif os.path.isdir(path):
             shutil.rmtree(path)
 
-    del geo_coords
-    del geo_file
-    del flag_file
-    del dta
+    print(f'#{index + 1} process done.')
 
-    gc.collect()
+    time.sleep(1)
+    os.system('cls' if os.name == 'nt' else 'clear') 
 
 
-# 
+# In[13]:
 
-# filtered_result = []
-# 
-# for res in search_result.results:
-#     file_geom = shape(res['geometry'])
-#     if bbox_polygon_shape.within(file_geom):
-#         file_id = res['id']
-#         filtered_result.append(res)
-# #        print(f"Found: {file_id}")
-# 
-# print(len(filtered_result))
-# 
 
-# for res in search_result.results:
-#     file_id = res['id']
-#     print(f"Found: {file_id}")
+files = glob.glob(os.path.join(result_dir , f'*{nick}.nc'))
+ds = xr.open_mfdataset(files, decode_coords="all")
 
-# data_id = search_result[0].results[0]['id']
-# 
-# start = datetime.strptime(search_result[0].results[0]['properties']['startdate'], '%Y-%m-%dT%H:%M:%S%fZ')
-# end = datetime.strptime(search_result[0].results[0]['properties']['enddate'], '%Y-%m-%dT%H:%M:%S%fZ')
-# 
-# timestamp = start + (end - start) / 2
-# 
-# print(start, end, timestamp)
-# search_result[0].download()
+ds_day = ds.resample(time="D").mean()
+ds_day.to_netcdf(os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}.nc'))
+print(ds_day)
 
-# with zipfile.ZipFile(data_id + '.zip', 'r') as zip_ref:
-#     zip_ref.extractall(download_dir)
-#     print(f'Unzipping of product {data_id} finished.')
-#     os.remove(data_id + '.zip')
 
-# filedir = os.path.join(download_dir,data_id)
-# geo_coords = xr.open_dataset(filedir + '/geo_coordinates.nc')
-# flag_file = xr.open_dataset(filedir + '/wqsf.nc')
-# 
-# chlnn = xr.open_dataset(filedir + '/chl_nn.nc')
-# chloc = xr.open_dataset(filedir + '/chl_oc4me.nc')
-# tsmnn = xr.open_dataset(filedir + '/tsm_nn.nc')
-# 
-# geo_file = xr.combine_by_coords([chlnn, chloc, tsmnn], join="exact", combine_attrs="drop_conflicts")
-# ref_file = xr.open_mfdataset(filedir + '/*reflectance.nc')
+# In[14]:
 
-# lon = geo_coords.variables['longitude'].data
-# lat = geo_coords.variables['latitude'].data
-# flags_data = flag_file.variables['WQSF'].data
-# chl_nn = geo_file.variables['CHL_NN'].data
 
-# list_flag_nn = ['LAND', 'INLAND_WATER', 'TIDAL', 'COASTLINE', 'CLOUD', 'CLOUD_AMBIGUOUS', 'CLOUD_MARGIN', 'INVALID', 'COSMETIC', 'SATURATED', 'SUSPECT', 'HISOLZEN', 'HIGHGLINT', 'SNOW_ICE', 'AC_FAIL', 'WHITECAPS', 'ADJAC', 'RWNEG_O2', 'RWNEG_O3', 'RWNEG_O4', 'RWNEG_O5', 'RWNEG_O6', 'RWNEG_O7', 'RWNEG_O8', 'OCNN_FAIL']
-# 
-# flag_names = flag_file['WQSF'].flag_meanings.split(' ') #flag names
-# flag_vals = flag_file['WQSF'].flag_masks #flag bit values
-# flags_data = flag_file.variables['WQSF'].data
-# 
-# flag_mask = flag_data_fast(list_flag_nn, flag_names, flag_vals, flags_data, flag_type='WQSF') # return a numpy array with selected flags
-# 
-# chl_flagged = np.where(flag_mask, np.nan, chl_nn) # return a numpy array of masked chl-a data
+time_span = (ds_day.time[-1] - ds_day.time[0]).values / np.timedelta64(1,'D') 
 
-# dta = xr.Dataset()
-# 
-# dta['longitude'] = xr.DataArray(lon, dims=('rows','columns'))
-# dta['longitude'].attrs = geo_coords['longitude'].attrs
-# dta['latitude'] = xr.DataArray(lat, dims=('rows','columns'))
-# dta['latitude'].attrs = geo_coords['latitude'].attrs
-# 
-# dta['chl_flag'] = xr.DataArray(chl_flagged, dims=('rows','columns'))
-# dta['CHL_NN'] = geo_file['CHL_NN']
-# dta['chl_flag'].attrs = geo_file['CHL_NN'].attrs
-# 
-# dta = dta.set_coords(['longitude','latitude'])
-# 
-# dta = dta.expand_dims(dim={"time":[timestamp]}, axis=0)
+if time_span >= 365:
+    ds_month = ds.resample(time="MS").mean()
+    ds_month.to_netcdf(os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}_monthly.nc'))
+    print(ds_month)
+    if time_span >= 730:
+        ds_season = ds.resample(time="QS-DEC").mean()
+        ds_season.to_netcdf(os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}_seasonal.nc'))
+        print(ds_season)
 
-# del geo_coords
-# del geo_file
-# del flag_file
-# 
-# gc.collect()
 
-# chl_plot = 10 ** dta['chl_flag']
-# asl_plot = 10 ** dta['CHL_NN']
+# In[15]:
 
-# fig, ax = plt.subplots(figsize=[8,6], ncols = 2, layout='constrained', subplot_kw=dict(projection=ccrs.Robinson(central_longitude=112.0)))
-# 
-# for i in range(2):
-#     ax[i].coastlines()
-#     ini = ax[i].gridlines(draw_labels = True, alpha=0.5)
-#     ini.top_labels = False
-#     ini.right_labels = False
-#     if not i == 0:
-#         ini.left_labels = False
-# 
-# asl_plot.plot(ax=ax[0], x='longitude',y='latitude', add_colorbar=False, norm=colors.LogNorm(0.01,100), cmap=cmo.algae, transform=ccrs.PlateCarree(), zorder=0)
-# ax[0].set_title("Before Applying Flags")
-# chl_plot.plot(ax=ax[1], x='longitude',y='latitude', add_colorbar=False, norm=colors.LogNorm(0.01,100), cmap=cmo.algae, transform=ccrs.PlateCarree(), zorder=0)
-# ax[1].set_title("After Applying Flags")
-# 
-# cbar = plt.colorbar(cm.ScalarMappable(norm=colors.LogNorm(0.01,100), cmap=cmo.algae), shrink=0.7, aspect=40, pad=0.02, orientation = 'horizontal', label = 'Chlorophyll-a Concentration',ax=ax[0:])
 
-# reggridded = cdo.sellonlatbox(bbox_str, input = dta, returnXDataset = True)
-# 
-# # reggridded = cdo.remapcon(gridfile, input = bounded_dataset, returnXDataset = True)
+files_to_delete = glob.glob(os.path.join(result_dir, "*.nc"))
+files_to_delete = [f for f in files_to_delete if "Sen-3" not in f]
 
-# reggridded.to_netcdf(os.path.join(result_dir , data_id + '.nc'))
-# 
-# regrid = xr.open_dataset(os.path.join(result_dir , data_id + '.nc'))
-# 
-# print(regrid)
+for file in files_to_delete:
+    os.remove(file)
 
-# chl_plot = 10 ** regrid['chl_flag']
+#display(ds)
 
-# import cartopy
-# 
-# fig, ax = plt.subplots(figsize=[8,6], layout='constrained', subplot_kw=dict(projection=ccrs.Robinson(central_longitude=112.0)))
-# 
-# ax.set_extent(extent, crs=ccrs.PlateCarree())
-# ax.add_feature(cf.LAND.with_scale('10m'), facecolor = 'beige', edgecolor='black', zorder = 1)
-# #ax.coastlines()
-# ini = ax.gridlines(draw_labels = True, alpha=0.5)
-# ini.top_labels = False
-# ini.right_labels = False
-# 
-# chl_plot.plot(ax=ax, x='longitude', y='latitude', norm=colors.LogNorm(0.01,100), cmap=cmo.algae, transform=ccrs.PlateCarree(), zorder=0)
 
-# cdo.cleanTempDir()
-# gc.collect()
+# In[16]:
 
-# shutil.rmtree(download_dir)
+
+dataset = xr.open_dataset(os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}.nc'), decode_coords='all')
+dataset = dataset.mean(dim='time')
+
+fig, ax = plt.subplots(figsize=[10,6], ncols = 3, layout='constrained', subplot_kw=dict(projection=ccrs.Robinson(central_longitude=112.0)))
+
+for i in range(3):
+    ax[i].set_extent(extent, crs=ccrs.PlateCarree())
+    ax[i].add_feature(cf.LAND.with_scale('10m'), facecolor = 'beige', edgecolor='black', zorder = 1)
+    ini = ax[i].gridlines(draw_labels = True, alpha=0.5)
+    ini.top_labels = False
+    ini.right_labels = False
+    if not i == 0:
+        ini.left_labels = False
+
+if parameters == 1:    
+    cnn_plot = 10 ** dataset['chl_nn']
+    coc_plot = 10 ** dataset['chl_oc4me']
+    tsm_plot = 10 ** dataset['tsm_nn']
+    
+    cnn_plot.plot(ax=ax[0], add_colorbar=False, norm=colors.LogNorm(0.01,100), cmap=cmo.algae, transform=ccrs.PlateCarree(), zorder=0)
+    ax[0].set_title("Chlorophyll-a NN")
+    coc_plot.plot(ax=ax[1], add_colorbar=False, norm=colors.LogNorm(0.01,100), cmap=cmo.algae, transform=ccrs.PlateCarree(), zorder=0)
+    ax[1].set_title("Chlorophyll-a OC4ME")
+    tsm_plot.plot(ax=ax[2], add_colorbar=False, norm=colors.LogNorm(0.01,100), cmap=cmo.matter, transform=ccrs.PlateCarree(), zorder=0)
+    ax[2].set_title("Total Suspended Matter NN")
+    
+    cbar1 = plt.colorbar(cm.ScalarMappable(norm=colors.LogNorm(0.01,100), cmap=cmo.algae), shrink=0.7, aspect=40, pad=0.02, orientation = 'horizontal', label = 'Chlorophyll-a Concentration',ax=ax[0:2])
+    cbar2 = plt.colorbar(cm.ScalarMappable(norm=colors.LogNorm(0.01,100), cmap=cmo.matter), shrink=0.7, aspect=20, pad=0.02, orientation = 'horizontal', label = 'Total Suspended Matter',ax=ax[2:])
+
+else:
+    a06_plot = dataset['Oa06_reflectance']
+    a08_plot = dataset['Oa08_reflectance']
+    a12_plot = dataset['Oa12_reflectance']
+    
+    r1 = a06_plot.plot(ax=ax[0], norm=colors.Normalize(0,0.1), cmap=cmo.hawaii, transform=ccrs.PlateCarree(), zorder=0)
+    ax[0].set_title("Oa06")
+    fig.colorbar(r1, ax=ax[0], shrink=0.6, location='bottom')
+    r2 = a08_plot.plot(ax=ax[1], norm=colors.Normalize(0,0.025), cmap=cmo.hawaii, transform=ccrs.PlateCarree(), zorder=0)
+    ax[1].set_title("Oa08")
+    fig.colorbar(r2, ax=ax[1], shrink=0.6, location='bottom')
+    r3 = a12_plot.plot(ax=ax[2], norm=colors.Normalize(0,0.05), cmap=cmo.hawaii, transform=ccrs.PlateCarree(), zorder=0)
+    ax[2].set_title("Oa12")
+    fig.colorbar(r3, ax=ax[2], shrink=0.6, location='bottom')
+
+plt.show()    
+
+plt.savefig(download_dir,f'Mean_of_{nick}.png', dpi=300)
+
+
+# In[ ]:
+
+
+
+
+
+# In[ ]:
+
+
+
+
