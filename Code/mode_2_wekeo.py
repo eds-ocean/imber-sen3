@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import os, shutil, gc, glob
@@ -33,6 +33,9 @@ import zipfile
 from rich.jupyter import print as rprint
 from rich.table import Table
 from rich.markdown import Markdown
+from rich.console import Console
+console = Console()
+
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -40,7 +43,7 @@ warnings.filterwarnings('ignore')
 from tqdm.auto import tqdm
 
 
-# In[2]:
+# In[ ]:
 
 
 download_dir = os.path.join(os.path.expanduser('~'),"sentinel-3_program","downloaded-data")
@@ -49,8 +52,19 @@ result_dir = os.path.join(os.path.expanduser('~'),"sentinel-3_program","processe
 os.makedirs(download_dir, exist_ok=True)
 os.makedirs(result_dir, exist_ok=True)
 
+cleardown = glob.glob(os.path.join(download_dir, "*"))
 
-# In[3]:
+for file in cleardown:
+    os.remove(file)
+
+clearres = glob.glob(os.path.join(result_dir, "*"))
+clearres = [f for f in clearres if "Sen-3" not in f]
+
+for file in clearres:
+    os.remove(file)
+
+
+# In[ ]:
 
 
 list_flags_common = ['LAND','INLAND_WATER','COASTLINE','CLOUD','CLOUD_AMBIGUOUS','CLOUD_MARGIN','INVALID','COSMETIC','SATURATED','SUSPECT','HISOLZEN','HIGHGLINT','SNOW_ICE']
@@ -72,7 +86,7 @@ def flag_data_fast(list_flag, flag_names, flag_values, flag_data, flag_type='WQS
     return (flag_data & flag_bits) > 0			
 
 
-# In[4]:
+# In[ ]:
 
 
 os.system('cls' if os.name == 'nt' else 'clear') 
@@ -104,7 +118,7 @@ while True:
         print('You entered wrong username and/or password.')
 
 
-# In[5]:
+# In[ ]:
 
 
 time.sleep(1)
@@ -113,14 +127,17 @@ os.system('cls' if os.name == 'nt' else 'clear')
 sat_md_1 = '''
 ### Enter Satellite Parameters
 
-Sentinel-3 is available in two satellites: Sentinel-3A and Sentinel-3B. Please note that Sentinel-3B is only available from 18 May 2018.
+Sentinel-3 program have 2 satellites: Sentinel-3A (launched 16 February 2016) and Sentinel-3B (launched 25 April 2018).
 
-The Sentinel-3 dataset in WEkEO available in two time period `EO:EUM:DAT:SENTINEL-3:0556` (2016 - 2021) and `EO:EUM:DAT:SENTINEL-3:OL_2_WFR___` (2021 - recent)
+However, the Sentinel-3 Level 2 dataset in WEkEO are available in two type:
+
+1. `EO:EUM:DAT:SENTINEL-3:0556` &rarr; Reprocessed dataset (25 April 2016 - 28 April 2021)
+2. `EO:EUM:DAT:SENTINEL-3:OL_2_WFR___` &rarr; (5 July 2017 - recent)
 
 #### Enter the satellite designation (`A` or `B`):
 
-- Sentinel-3**A**
-- Sentinel-3**B**
+- `A` = Sentinel-3A
+- `B` = Sentinel-3B
 
 Leave it blank if you want both Sentinel-3A and Sentinel-3B queried.
 
@@ -144,6 +161,7 @@ else:
     print()
 
 sat_md_2 = '''
+
 #### Enter Sentinel-3 dataset ID (`1` or `2`)
 
 1. EO:EUM:DAT:SENTINEL-3:0556
@@ -172,7 +190,7 @@ while True:
 print()
 
 
-# In[7]:
+# In[ ]:
 
 
 time.sleep(1)
@@ -231,17 +249,16 @@ ds["data"] = (["lat", "lon"], np.zeros((num_lat, num_lon)))
 ds.rio.write_crs('epsg:4326', inplace=True)
 
 ds.to_netcdf(download_dir + '/grid_data.nc')
+
 dsinput = download_dir + '/grid_data.nc'
-
 grids = cdo.griddes(input = dsinput)
-
 gridfile = os.path.join(os.getcwd(), 'gridfile.txt') 
 
 with open(gridfile, 'w') as f:
     print("\n".join(line.strip("'") for line in grids), file = f)
 
 
-# In[8]:
+# In[ ]:
 
 
 time.sleep(1)
@@ -251,7 +268,7 @@ os.system('cls' if os.name == 'nt' else 'clear')
 time_md = '''
 ### Time of Interest
 
-Please input the start date and end date of your interest. The dates should be in `YYYY-MM-DD` format.
+Please input the start date and end date of your interest. The dates should be in `YYYY-MM-DD` format. Only use the time period suitable for your selected dataset.
 '''
 
 rprint(Markdown(time_md))
@@ -261,7 +278,40 @@ dtstart = input('Time start: ')
 dtend = input('Time end: ')
 
 
-# In[9]:
+# In[ ]:
+
+
+time.sleep(1)
+os.system('cls' if os.name == 'nt' else 'clear') 
+
+params_md = '''
+Please select what parameters you want to download. 
+
+1. Download geophysical (chlorophyll-a and total suspended matter)
+2. Download water surface reflectances.
+'''
+rprint(Markdown(params_md))
+
+print()
+
+while True:
+    parameters = int(input('Parameters: '))
+
+    if parameters == 1:
+        nick = 'geophysical-data'
+        print()
+        print('Geophysical data will be processed.')
+        break
+    elif parameters == 2:
+        nick = 'optical-data'
+        print()
+        print('Reflectance data will be processed.')
+        break
+    else:
+        print("You put wrong number. Please try again!")
+
+
+# In[ ]:
 
 
 time.sleep(1)
@@ -290,70 +340,40 @@ query_tab.add_column('Value', style='bright_green')
 for col1, col2 in query.items():
     query_tab.add_row(str(col1), str(col2))
 
+
 rprint(Markdown(resume_md))
 rprint(query_tab)
 
-
-# In[10]:
-
-
-time.sleep(1)
-os.system('cls' if os.name == 'nt' else 'clear') 
-
-params_md = '''
-Please select parameters you want to download. 
-
-1. Download geophysical (chlorophyll-a and total suspended matter)
-2. Download water surface reflectances.
-'''
-rprint(Markdown(params_md))
-
-print()
-
-while True:
-    parameters = int(input('Parameters: '))
-
-    if parameters == 1:
-        nick = 'geophysical-data'
-        print()
-        print('Geophysical data will be processed.')
-        break
-    elif parameters == 2:
-        nick = 'optical-data'
-        print()
-        print('Reflectance data will be processed.')
-        break
-    else:
-        print("You put wrong number. Please try again!")
-
-
-# In[11]:
-
+time.sleep(0.5)
 
 search_result = c.search(query)
 print(search_result)
 
 
-# In[12]:
+# In[ ]:
 
+
+time.sleep(3)
+os.system('cls' if os.name == 'nt' else 'clear') 
 
 for index, result in tqdm(enumerate(search_result.results, start=0), desc="Processing: ", total = len(search_result.results), position=0, leave=False):
-    print(f'Processing data no. {index + 1} started.')
+    console.log(f'Processing data no. {index + 1} started.')
     file_id = result['id']
-
-    print(f'Downloading data.')
-    search_result[index].download()
 
     start = datetime.strptime(result['properties']['startdate'], '%Y-%m-%dT%H:%M:%S%fZ')
     end = datetime.strptime(result['properties']['enddate'], '%Y-%m-%dT%H:%M:%S%fZ')
     timestamp = start + (end - start) / 2
 
+    console.log(f'Downloading data.')
+    search_result[index].download()
+
+
     with zipfile.ZipFile(file_id + '.zip', 'r') as zip_ref:
-        print(f'Unzipping data.')
+        console.log(f'Extracting data.')
         zip_ref.extractall(download_dir)
         os.remove(file_id + '.zip')
 
-    print(f'Selecting and masking data.')
+    console.log(f'Applying mask to data.')
     
     geo_coords = xr.open_dataset(os.path.join(download_dir, file_id, 'geo_coordinates.nc'))
     
@@ -403,7 +423,7 @@ for index, result in tqdm(enumerate(search_result.results, start=0), desc="Proce
     dta = dta.expand_dims(dim={"time":[timestamp]}, axis=0)
     dta = dta.cf.add_bounds(['latitude','longitude'])
 
-    print(f'Subsetting data.')
+    console.log(f'Subsetting data.')
 
     reggrid = cdo.sellonlatbox(bbox_str, input = dta, returnXDataset = True)
     
@@ -444,39 +464,55 @@ for index, result in tqdm(enumerate(search_result.results, start=0), desc="Proce
         elif os.path.isdir(path):
             shutil.rmtree(path)
 
-    print(f'#{index + 1} process done.')
+    console.log(f'#{index + 1} data processing done.')
 
-    time.sleep(1)
+    del dta
+    del dataset
+    del reggridded
+
+    time.sleep(0.8)
     os.system('cls' if os.name == 'nt' else 'clear') 
 
+#rprint("Processing done! :sunglasses: Will continue with creating timeseries dataset.")
 
-# In[13]:
+
+# In[ ]:
 
 
 files = glob.glob(os.path.join(result_dir , f'*{nick}.nc'))
 ds = xr.open_mfdataset(files, decode_coords="all")
 
 ds_day = ds.resample(time="D").mean()
-ds_day.to_netcdf(os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}.nc'))
-print(ds_day)
+
+ds_day.to_netcdf(
+    os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}.nc'),
+    format = 'NETCDF4', 
+    encoding = {var: comp for var in ds_day.data_vars}
+)
 
 
-# In[14]:
+# In[ ]:
 
 
 time_span = (ds_day.time[-1] - ds_day.time[0]).values / np.timedelta64(1,'D') 
 
 if time_span >= 365:
     ds_month = ds.resample(time="MS").mean()
-    ds_month.to_netcdf(os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}_monthly.nc'))
+    ds_month.to_netcdf(
+        os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}_monthly.nc'),
+        encoding = {var: comp for var in ds_month.data_vars}
+    )
     print(ds_month)
     if time_span >= 730:
         ds_season = ds.resample(time="QS-DEC").mean()
-        ds_season.to_netcdf(os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}_seasonal.nc'))
+        ds_season.to_netcdf(
+            os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}_seasonal.nc'),
+            encoding = {var: comp for var in ds_season.data_vars}
+        )
         print(ds_season)
 
 
-# In[15]:
+# In[ ]:
 
 
 files_to_delete = glob.glob(os.path.join(result_dir, "*.nc"))
@@ -486,58 +522,6 @@ for file in files_to_delete:
     os.remove(file)
 
 #display(ds)
-
-
-# In[16]:
-
-
-dataset = xr.open_dataset(os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}.nc'), decode_coords='all')
-dataset = dataset.mean(dim='time')
-
-fig, ax = plt.subplots(figsize=[10,6], ncols = 3, layout='constrained', subplot_kw=dict(projection=ccrs.Robinson(central_longitude=112.0)))
-
-for i in range(3):
-    ax[i].set_extent(extent, crs=ccrs.PlateCarree())
-    ax[i].add_feature(cf.LAND.with_scale('10m'), facecolor = 'beige', edgecolor='black', zorder = 1)
-    ini = ax[i].gridlines(draw_labels = True, alpha=0.5)
-    ini.top_labels = False
-    ini.right_labels = False
-    if not i == 0:
-        ini.left_labels = False
-
-if parameters == 1:    
-    cnn_plot = 10 ** dataset['chl_nn']
-    coc_plot = 10 ** dataset['chl_oc4me']
-    tsm_plot = 10 ** dataset['tsm_nn']
-    
-    cnn_plot.plot(ax=ax[0], add_colorbar=False, norm=colors.LogNorm(0.01,100), cmap=cmo.algae, transform=ccrs.PlateCarree(), zorder=0)
-    ax[0].set_title("Chlorophyll-a NN")
-    coc_plot.plot(ax=ax[1], add_colorbar=False, norm=colors.LogNorm(0.01,100), cmap=cmo.algae, transform=ccrs.PlateCarree(), zorder=0)
-    ax[1].set_title("Chlorophyll-a OC4ME")
-    tsm_plot.plot(ax=ax[2], add_colorbar=False, norm=colors.LogNorm(0.01,100), cmap=cmo.matter, transform=ccrs.PlateCarree(), zorder=0)
-    ax[2].set_title("Total Suspended Matter NN")
-    
-    cbar1 = plt.colorbar(cm.ScalarMappable(norm=colors.LogNorm(0.01,100), cmap=cmo.algae), shrink=0.7, aspect=40, pad=0.02, orientation = 'horizontal', label = 'Chlorophyll-a Concentration',ax=ax[0:2])
-    cbar2 = plt.colorbar(cm.ScalarMappable(norm=colors.LogNorm(0.01,100), cmap=cmo.matter), shrink=0.7, aspect=20, pad=0.02, orientation = 'horizontal', label = 'Total Suspended Matter',ax=ax[2:])
-
-else:
-    a06_plot = dataset['Oa06_reflectance']
-    a08_plot = dataset['Oa08_reflectance']
-    a12_plot = dataset['Oa12_reflectance']
-    
-    r1 = a06_plot.plot(ax=ax[0], norm=colors.Normalize(0,0.1), cmap=cmo.hawaii, transform=ccrs.PlateCarree(), zorder=0)
-    ax[0].set_title("Oa06")
-    fig.colorbar(r1, ax=ax[0], shrink=0.6, location='bottom')
-    r2 = a08_plot.plot(ax=ax[1], norm=colors.Normalize(0,0.025), cmap=cmo.hawaii, transform=ccrs.PlateCarree(), zorder=0)
-    ax[1].set_title("Oa08")
-    fig.colorbar(r2, ax=ax[1], shrink=0.6, location='bottom')
-    r3 = a12_plot.plot(ax=ax[2], norm=colors.Normalize(0,0.05), cmap=cmo.hawaii, transform=ccrs.PlateCarree(), zorder=0)
-    ax[2].set_title("Oa12")
-    fig.colorbar(r3, ax=ax[2], shrink=0.6, location='bottom')
-
-plt.show()    
-
-plt.savefig(download_dir,f'Mean_of_{nick}.png', dpi=300)
 
 
 # In[ ]:
