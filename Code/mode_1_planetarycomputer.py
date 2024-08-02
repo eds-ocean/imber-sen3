@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import os, shutil, gc, glob
 
-import hda
+import planetary_computer
+import pystac_client
+import fsspec
+
 from getpass import getpass
 
 import xarray as xr
@@ -14,7 +17,7 @@ import numpy as np
 import cf_xarray, rioxarray
 
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from cdo import *
 cdo = Cdo()
@@ -30,12 +33,11 @@ from cartopy import feature as cf
 
 import zipfile
 
-from rich.jupyter import print as rprint
+#from rich.jupyter import print as rprint
 from rich.table import Table
 from rich.markdown import Markdown
 from rich.console import Console
 console = Console()
-
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -82,112 +84,8 @@ def flag_data_fast(list_flag, flag_names, flag_values, flag_data, flag_type='WQS
         try:
             flag_bits = flag_bits | flag_values[flag_names.index(flag)]
         except:
-            print(flag + 'not present')
+            print(flag + ' not present')
     return (flag_data & flag_bits) > 0			
-
-
-# In[ ]:
-
-
-os.system('cls' if os.name == 'nt' else 'clear') 
-
-intro_md = '''
-# Welcome to Sentinel-3 OLCI Biogeochemical Data Access Program
-
-This program is developed by Edwards Taufiqurrahman and the Integrated Marine Biosphere Research Group, Research Centre for Oceanography, National Research and Innovation Agency, Indonesia.
-
-At first, you will be asked the WEkEO `Username` and `Password` and data that you need. Therefore, before start, please make sure that you have a WEkEO Account (you can create one from this link: [https://www.wekeo.eu/register](https://www.wekeo.eu/register)) and you should already know some information about data that you need.
-
-### Enter your WEkEO Credential
-'''
-
-rprint(Markdown(intro_md))
-
-print()
-
-while True:
-    try:
-        user = input("Enter your WEkEO username: ")
-        passw = getpass("Enter your WEkEO password: ")
-        c = hda.Client(hda.Configuration(user=user, password=passw), progress=True, max_workers=1)
-        print()
-        print(f"Login successfull!. Your token is {c.token}.")
-        break
-    except KeyError:
-        print()
-        print('You entered wrong username and/or password.')
-
-
-# In[ ]:
-
-
-time.sleep(1)
-os.system('cls' if os.name == 'nt' else 'clear') 
-
-sat_md_1 = '''
-### Enter Satellite Parameters
-
-Sentinel-3 program have 2 satellites: Sentinel-3A (launched 16 February 2016) and Sentinel-3B (launched 25 April 2018).
-
-However, the Sentinel-3 Level 2 dataset in WEkEO are available in two type:
-
-1. `EO:EUM:DAT:SENTINEL-3:0556` &rarr; Reprocessed dataset (25 April 2016 - 28 April 2021)
-2. `EO:EUM:DAT:SENTINEL-3:OL_2_WFR___` &rarr; (5 July 2017 - recent)
-
-#### Enter the satellite designation (`A` or `B`):
-
-- `A` = Sentinel-3A
-- `B` = Sentinel-3B
-
-Leave it blank if you want both Sentinel-3A and Sentinel-3B queried.
-
-'''
-
-rprint(Markdown(sat_md_1))
-print()
-
-sat_nm = input("Satellite name: ")
-
-print()
-
-if sat_nm == 'a' or sat_nm == 'A':
-    sat = 'Sentinel-3A'
-    print()
-elif sat_nm == 'b' or sat_nm == 'B':
-    sat = 'Sentinel-3B'
-    print()
-else:
-    sat = ''
-    print()
-
-sat_md_2 = '''
-
-#### Enter Sentinel-3 dataset ID (`1` or `2`)
-
-1. EO:EUM:DAT:SENTINEL-3:0556
-2. EO:EUM:DAT:SENTINEL-3:OL_2_WFR___
-'''
-
-rprint(Markdown(sat_md_2))
-
-print()
-
-while True:
-    sat_id = int(input('Satellite ID: '))
-
-    if sat_id == 1:
-        dataset_id = 'EO:EUM:DAT:SENTINEL-3:0556'
-        print()
-        break
-    elif sat_id == 2:
-        dataset_id = 'EO:EUM:DAT:SENTINEL-3:OL_2_WFR___'
-        print()
-        break
-    else:
-        print()
-        rprint("You put wrong number. Please try again!")
-
-print()
 
 
 # In[ ]:
@@ -197,18 +95,38 @@ time.sleep(1)
 os.system('cls' if os.name == 'nt' else 'clear') 
 
 area_md = '''
-Please input your area of interest. The coordinates should be in **decimal format** with minus (`-`) sign for south-of-equator latitude or west-of-greenwich longitude.
+### 🌏  Area of Interest
+Please input coordinates of your area of interest. The coordinates should be in **decimal format** with minus (➖) sign for south-of-equator latitude or west-of-greenwich longitude.
 '''
 # Area of interest
-rprint(Markdown(area_md))
+console.print(Markdown(area_md))
 
 north = float(input('North point: ')) # -6.85
 south = float(input('South point: ')) # -7.95
 west = float(input('West point: ')) # 112.66
 east = float(input('East point: ')) # 114.65
 
+
+# In[ ]:
+
+
+area_of_interest = {
+    "type": "Polygon",
+    "coordinates": [
+        [
+            [west, south],
+            [east, south],
+            [east, north],
+            [west, north],
+            [west, south],
+        ]
+    ],
+}
+
+
+extent = [west, east, south, north]
 bbox = [west, south, east, north]
-extent = [west, east, north, south]
+
 bbox_str = f'{west},{east},{south},{north}' 
 
 def format_coordinate(value, is_latitude):
@@ -225,8 +143,6 @@ west_str = format_coordinate(west, is_latitude=False)
 east_str = format_coordinate(east, is_latitude=False)
 
 geostr = f"{north_str}_{south_str}_{west_str}_{east_str}"
-
-print(geostr)
 
 
 # In[ ]:
@@ -279,6 +195,10 @@ with open(gridfile, 'w') as f:
     print("\n".join(line.strip("'") for line in grids), file = f)
 
 
+ds.close()
+gc.collect()
+
+
 # In[ ]:
 
 
@@ -287,16 +207,18 @@ os.system('cls' if os.name == 'nt' else 'clear')
 
 ## Time of interest
 time_md = '''
-### Time of Interest
+### 🕒  Time of Interest
 
-Please input the start date and end date of your interest. The dates should be in `YYYY-MM-DD` format. Only use the time period suitable for your selected dataset.
+Please input the start and end of your time of interest. The dates should be in `YYYY-MM-DD` format. This program will select data available between the the times, and returned dataset time might be different due to the availability.
 '''
 
-rprint(Markdown(time_md))
+console.print(Markdown(time_md))
 
 print()
 dtstart = input('Time start: ')
 dtend = input('Time end: ')
+
+time_of_interest = f"{dtstart}/{dtend}"
 
 
 # In[ ]:
@@ -306,12 +228,15 @@ time.sleep(1)
 os.system('cls' if os.name == 'nt' else 'clear') 
 
 params_md = '''
-Please select what parameters you want to download. 
+### 📊  Dataset Parameter
 
-1. Download geophysical (chlorophyll-a and total suspended matter)
+Please select dataset parameters you want to download. 
+
+1. Download geophysical parameters (chlorophyll-a and total suspended matter)
 2. Download water surface reflectances.
 '''
-rprint(Markdown(params_md))
+
+console.print(Markdown(params_md))
 
 print()
 
@@ -321,12 +246,12 @@ while True:
     if parameters == 1:
         nick = 'geophysical-data'
         print()
-        print('Geophysical data will be processed.')
+        print('Geophysical parameters will be processed.')
         break
     elif parameters == 2:
         nick = 'optical-data'
         print()
-        print('Reflectance data will be processed.')
+        print('Water surface reflectances will be processed.')
         break
     else:
         print("You put wrong number. Please try again!")
@@ -335,40 +260,27 @@ while True:
 # In[ ]:
 
 
-time.sleep(1)
-os.system('cls' if os.name == 'nt' else 'clear') 
+catalog = pystac_client.Client.open("https://planetarycomputer.microsoft.com/api/stac/v1", modifier=planetary_computer.sign_inplace)
+search = catalog.search(collections=["sentinel-3-olci-wfr-l2-netcdf"], intersects=area_of_interest, datetime=time_of_interest)
 
-resume_md = '''
-### Data Query
-
-Below is the resume of data query based on your input.
-'''
-
-query = {
-  "dataset_id": dataset_id, 
-  "dtstart": dtstart,
-  "dtend": dtend,
-  "bbox": bbox,
-  "sat": sat,
-  "type": "OL_2_WFR___",
-  "timeliness": "NT"
-}
-
-query_tab = Table(title="Search Query")
-query_tab.add_column('Parameter', style='cyan')
-query_tab.add_column('Value', style='bright_green')
-
-for col1, col2 in query.items():
-    query_tab.add_row(str(col1), str(col2))
+items = search.item_collection()
 
 
-rprint(Markdown(resume_md))
-rprint(query_tab)
+# In[ ]:
 
-time.sleep(0.5)
 
-search_result = c.search(query)
-print(search_result)
+table = Table(title = "Summary")
+
+table.add_column("Released", justify="left", style="cyan", no_wrap=True)
+table.add_column("Title", justify="left", style="magenta")
+
+table.add_row(f"Area of interest",f"{geostr}")
+table.add_row(f"Time of interest",f"{time_of_interest}")
+table.add_row(f"Number of items",f"{len(items)}")
+table.add_row(f"First dataset",f"{items[-1].properties['datetime']}")
+table.add_row(f"last dataset",f"{items[0].properties['datetime']}")
+
+console.print(table)
 
 
 # In[ ]:
@@ -382,74 +294,82 @@ for i in range(3, 0, -1):
 
 os.system('cls' if os.name == 'nt' else 'clear') 
 
-for index, result in tqdm(enumerate(search_result.results, start=0), desc="Processing: ", total = len(search_result.results), position=0, leave=False):
+for index, item in tqdm(enumerate(items, start=1), desc="Processing: ", total = len(items), position=0, leave=False):
     try:
         console.log(f'Processing data #{index} started.')
-        file_id = result['id']
+        file_id = item.id
     
-        start = datetime.strptime(result['properties']['startdate'], '%Y-%m-%dT%H:%M:%S%fZ')
-        end = datetime.strptime(result['properties']['enddate'], '%Y-%m-%dT%H:%M:%S%fZ')
-        timestamp = start + (end - start) / 2
-    
-        console.log(f'Downloading data.')
-        search_result[index].download()
-    
-    
-        with zipfile.ZipFile(file_id + '.zip', 'r') as zip_ref:
-            console.log(f'Extracting data.')
-            zip_ref.extractall(download_dir)
-            os.remove(file_id + '.zip')
-    
-        console.log(f'Applying mask to data.')
+        date_string = item.properties['datetime']
+        timestamp = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ')
         
-        geo_coords = xr.open_dataset(os.path.join(download_dir, file_id, 'geo_coordinates.nc'))
+        console.log(f'Dataset #{index}: Reading.')
+        coord_file = xr.open_dataset(fsspec.open(item.assets["geo-coordinates"].href).open())
+        flags_file = xr.open_dataset(fsspec.open(item.assets["wqsf"].href).open())
         
-        flag_file = xr.open_dataset(os.path.join(download_dir, file_id, 'wqsf.nc'))
-        flag_names = flag_file['WQSF'].flag_meanings.split(' ') #flag names
-        flag_vals = flag_file['WQSF'].flag_masks #flag bit values
-        flags_data = flag_file.variables['WQSF'].data
-            
+        flag_names = flags_file['WQSF'].flag_meanings.split(' ')
+        flag_vals = flags_file['WQSF'].flag_masks
+        flags_data = flags_file.variables['WQSF'].data
+    
         dta = xr.Dataset()
-        dta['longitude'] = geo_coords['longitude']
-        dta['latitude'] = geo_coords['latitude']
+        dta['longitude'] = coord_file['longitude']
+        dta['latitude'] = coord_file['latitude']
         
-        geo_coords.close()
-        flag_file.close()
+        coord_file.close()
+        flags_file.close()
         gc.collect()
     
+        console.log(f'Dataset #{index}: Applying flags.')
+    
         if parameters == 1:
-            keys = ["chl_nn","tsm_nn","chl_oc4me"]
+            keys = ["chl-nn","tsm-nn","chl-oc4me"]
             for k in keys:
                 if not k == 'chl_oc4me':
                     list_flags = list_flags_common + list_flags_ocnn
                 else:
                     list_flags = list_flags_common + list_flags_process + list_flags_oc4me
         
-                ds = xr.open_dataset(os.path.join(download_dir, file_id, f'{k}.nc'))
-                dtarr = ds[str(k.upper())].data
+                ds = xr.open_dataset(fsspec.open(item.assets[k].href).open())
+                da = ds[[var for var in ds.variables if "_err" not in var][0]]
+                ds.close()
+        
+                dtarr = da.data
+        
                 flag_mask = flag_data_fast(list_flags, flag_names, flag_vals, flags_data, flag_type='WQSF')
                 
                 flagged = np.where(flag_mask, np.nan, dtarr)
                 
                 dta[str(k)] = xr.DataArray(flagged, dims=('rows','columns'))
-                dta[str(k)].attrs = ds[str(k.upper())].attrs
+                dta[str(k)].attrs = da.attrs
+        
+                del ds
+                del da
+                del dtarr
+        
         elif parameters == 2:
-            keys = ['Oa01_reflectance','Oa02_reflectance','Oa03_reflectance','Oa04_reflectance','Oa05_reflectance','Oa06_reflectance','Oa07_reflectance','Oa08_reflectance','Oa09_reflectance','Oa10_reflectance','Oa11_reflectance','Oa12_reflectance','Oa16_reflectance','Oa17_reflectance','Oa18_reflectance','Oa21_reflectance']
+            keys = ['Oa01-reflectance','Oa02-reflectance','Oa03-reflectance','Oa04-reflectance','Oa05-reflectance','Oa06-reflectance','Oa07-reflectance','Oa08-reflectance','Oa09-reflectance','Oa10-reflectance','Oa11-reflectance','Oa12-reflectance','Oa16-reflectance','Oa17-reflectance','Oa18-reflectance','Oa21-reflectance']
             list_flags = list_flags_common + list_flags_process
             for k in keys:
-                ds = xr.open_dataset(os.path.join(download_dir, file_id, f'{k}.nc'))
-                dtarr = ds[str(k)].data
+                ds = xr.open_dataset(fsspec.open(item.assets[k].href).open())
+                da = ds[[var for var in ds.variables if "_err" not in var][0]]
+                ds.close()
+        
+                dtarr = da.data
+        
                 flag_mask = flag_data_fast(list_flags, flag_names, flag_vals, flags_data, flag_type='WQSF')
                 
                 flagged = np.where(flag_mask, np.nan, dtarr)
                 
                 dta[str(k)] = xr.DataArray(flagged, dims=('rows','columns'))
-                dta[str(k)].attrs = ds[str(k)].attrs
+                dta[str(k)].attrs = da.attrs
+        
+                del ds
+                del da
+                del dtarr
         
         dta = dta.set_coords(['latitude','longitude'])
         dta = dta.expand_dims(dim={"time":[timestamp]}, axis=0)
     
-        console.log(f'Subsetting data.')
+        console.log(f'Dataset #{index}: Subsetting.')
     
         reggrid = cdo.sellonlatbox(bbox_str, input = dta, returnXDataset = True)
         
@@ -463,11 +383,16 @@ for index, result in tqdm(enumerate(search_result.results, start=0), desc="Proce
             encoding=encoding
         )
         
+        dta.close()
+        del reggrid
         cdo.cleanTempDir()
+        gc.collect()
+    
+        console.log(f'Dataset #{index}: Regridding.')
     
         dataset = xr.open_dataset(os.path.join(download_dir , file_id + f'_{nick}.nc'), decode_coords="all")
         dataset = dataset.cf.add_bounds(['latitude','longitude'])
-    
+        
         reggridded = cdo.remapcon(gridfile, input = dataset, returnXDataset = True)
         
         comp = dict(zlib=True, _FillValue=-99999.0, complevel=4)
@@ -479,39 +404,34 @@ for index, result in tqdm(enumerate(search_result.results, start=0), desc="Proce
             unlimited_dims=['time'],
             encoding=encoding
         )
-        
-        cdo.cleanTempDir()
-        
-        gc.collect()
-        
-        for allitem in os.listdir(download_dir):
-            path = os.path.join(download_dir,allitem)
-            if os.path.isfile(path):
-                os.remove(path)
-            elif os.path.isdir(path):
-                shutil.rmtree(path)
     
-        console.log(f'#{index + 1} data processing done.')
-    
-        del dta
-        del dataset
+        dataset.close()
         del reggridded
+        cdo.cleanTempDir()
+        gc.collect()
     
-        time.sleep(1)
+        console.log(f'Dataset #{index}: Finished')
+    
+        time.sleep(0.5)
         os.system('cls' if os.name == 'nt' else 'clear') 
     except:
         continue
-
-        #rprint("Processing done! :sunglasses: Will continue with creating timeseries dataset.")
 
 
 # In[ ]:
 
 
+console.log(f'Combining dataset.')
+
 files = glob.glob(os.path.join(result_dir , f'S3*{nick}.nc'))
-ds = xr.open_mfdataset(files, decode_coords="all")
+ds = xr.open_mfdataset(files)
 
 ds_day = ds.resample(time="D").mean()
+
+ds.close()
+gc.collect()
+
+console.log(f'Saving result.')
 
 ds_day.to_netcdf(
     os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{geostr}_{nick}.nc'),
@@ -519,26 +439,17 @@ ds_day.to_netcdf(
     encoding = {var: comp for var in ds_day.data_vars}
 )
 
+console.log(f'All process done! 😎')
 
-# In[ ]:
+time.sleep(3)
 
+md_end = f"""
+Processing requested dataset succesfull. You can now download your data by accessing this path `{os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{geostr}_{nick}.nc')}` from the sidebar.
+"""
 
-time_span = (ds_day.time[-1] - ds_day.time[0]).values / np.timedelta64(1,'D') 
+console.print(Markdown(md_end))
 
-if time_span >= 365:
-    ds_month = ds.resample(time="MS").mean()
-    ds_month.to_netcdf(
-        os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}_monthly.nc'),
-        encoding = {var: comp for var in ds_month.data_vars}
-    )
-    print(ds_month)
-    if time_span >= 730:
-        ds_season = ds.resample(time="QS-DEC").mean()
-        ds_season.to_netcdf(
-            os.path.join(result_dir, f'Sen-3_{str(ds.time[0].data)[0:10]}_{str(ds.time[-1].data)[0:10]}_{nick}_seasonal.nc'),
-            encoding = {var: comp for var in ds_season.data_vars}
-        )
-        print(ds_season)
+time.sleep(5)
 
 
 # In[ ]:
@@ -551,16 +462,4 @@ for file in files_to_delete:
     os.remove(file)
 
 #display(ds)
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 
