@@ -54,7 +54,7 @@ After successfully log in to Jupyter Notebook, you can now upload the downloaded
 3. Unzip the file using terminal
 
     ```bash
-    unzip unzip imber-sen3-main.zip
+    unzip imber-sen3-main.zip
     ```
 
     ![alt text](.resources/Screenshot from 2024-08-04 14-13-06.png)
