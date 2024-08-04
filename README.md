@@ -20,7 +20,7 @@
 
 ### Sentinel-3 Data Access
 
-![alt text](image-1.png)
+![alt text](.resources/image-1.png)
 
 ### Pre-requisites
 
@@ -42,7 +42,7 @@ Detailed information of each tep shown below.
 
 ### Using WEkEO JupyterHub
 
-1. Log in to your Wekeo account ([create account here](https://www.wekeo.eu/register){:target="_blank"} if you don't have it yet).
+1. Log in to your Wekeo account ([create account here](https://www.wekeo.eu/register){target="_blank"} if you don't have it yet).
 2. Click the logo on upper right side and choose "Jupyter Notebook"
 3. Add your credential to log in.
 4. Choose one of server. It recommended to choose "Earth Observation Tools". 
@@ -57,7 +57,7 @@ After successfully log in to Jupyter Notebook, you can now upload the downloaded
     unzip unzip imber-sen3-main.zip
     ```
 
-    ![alt text](<Screenshot from 2024-08-04 14-13-06.png>)
+    ![alt text](.resources/Screenshot from 2024-08-04 14-13-06.png)
 
 ### Using Github Codespace
 
@@ -65,5 +65,5 @@ After you're done forking this repo, you can now create codespace to run the cod
 
 You might want setup the codespace first. To do so, in the Codespace tab click 3-dot (`...`) button and then choose "Manage Codespace" In the right, there is green button and click on left right side of the button (the thing with arrow), then select "Configure and create codespace". Fill the form like below.
 
-![alt text](image.png)
+![alt text](.resources/image.png)
 
