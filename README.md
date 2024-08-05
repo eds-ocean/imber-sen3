@@ -34,30 +34,42 @@ In your working machine, you will need to install required modules. Conda enviro
 
 ### First: Copy this repo
 
-Go to `Code` button and find the link to copy this repository (or download the zip file) to your preferred machine. If you are using Github, you can just fork this repo. Go to `https://github.com/eds-ocean/imber-sen3` and click **Fork** button, then continue with the instruction.
+[Download the zip file](https://github.com/eds-ocean/imber-sen3/archive/refs/heads/main.zip){:target="_blank"} of this repository and extract it in your preferred machine. If you are familiar with Github, it can be much simpler: you can just fork or clone this repo. 
 
-If you are not using github, you might want to download the zip file to your local computer, then upload and extract it on your JupyterHub.
-
-Detailed information of each tep shown below.
+The next step is to run the code in your preferred machine. We recommend using JupyterHub provided by WEkEO, or using Github Codespace. Detailed information of each method is shown below.
 
 ### Using WEkEO JupyterHub
 
-1. Log in to your Wekeo account ([create account here](https://www.wekeo.eu/register){target="_blank"} if you don't have it yet).
-2. Click the logo on upper right side and choose "Jupyter Notebook"
+1. Log in to your Wekeo account (please [create account here](https://www.wekeo.eu/register){:target="_blank"} if you don't have it yet).
+2. Click the Jupyter logo on upper right side and choose "Jupyter Notebook"
 3. Add your credential to log in.
-4. Choose one of server. It recommended to choose "Earth Observation Tools". 
+4. Choose the server. It is recommended to choose "Earth Observation Tools". 
 
 After successfully log in to Jupyter Notebook, you can now upload the downloaded zip file from Github.
 
-1. In the right sidebar, choose "Upload"
+1. In the right sidebar of Jupyter Notebook, choose "Upload"
 2. Open new Terminal 
-3. Unzip the file using terminal
+3. Type code below to unzip
 
     ```bash
     unzip imber-sen3-main.zip
     ```
 
-    ![alt text](.resources/Screenshot from 2024-08-04 14-13-06.png)
+    ![](.resources/Screenshot from 2024-08-04 14-13-06.png)
+4. Enter the extracted directory
+   ```bash
+   cd main
+   ```
+6. Create a new Python environment. If you want to use PlanetaryComputer, then type:
+   ```bash
+   conda env create -f Settings/sen3_pc.yml
+   ```
+   Otherwise, if you want to use WEkEO HDA, then type;
+   ```bash
+   conda env create -f Settings/sen3_wk.yml
+   ```
+7. s
+
 
 ### Using Github Codespace
 
@@ -65,5 +77,5 @@ After you're done forking this repo, you can now create codespace to run the cod
 
 You might want setup the codespace first. To do so, in the Codespace tab click 3-dot (`...`) button and then choose "Manage Codespace" In the right, there is green button and click on left right side of the button (the thing with arrow), then select "Configure and create codespace". Fill the form like below.
 
-![alt text](.resources/image.png)
+![](.resources/image.png)
 
