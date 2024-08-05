@@ -34,28 +34,28 @@ In your working machine, you will need to install required modules. Conda enviro
 
 ### First: Copy this repo
 
-[Download the zip file](https://github.com/eds-ocean/imber-sen3/archive/refs/heads/main.zip){:target="_blank"} of this repository and extract it in your preferred machine. If you are familiar with Github, it can be much simpler: you can just fork or clone this repo. 
+[Download the zip file](https://github.com/eds-ocean/imber-sen3/archive/refs/heads/main.zip) of this repository and extract it in your preferred machine. If you are familiar with Github, it can be much simpler: you can just fork or clone this repo. 
 
 The next step is to run the code in your preferred machine. We recommend using JupyterHub provided by WEkEO, or using Github Codespace. Detailed information of each method is shown below.
 
 ### Using WEkEO JupyterHub
 
-1. Log in to your Wekeo account (please [create account here](https://www.wekeo.eu/register){:target="_blank"} if you don't have it yet).
+1. Log in to your Wekeo account (please [create account here](https://www.wekeo.eu/register) if you don't have it yet).
 2. Click the Jupyter logo on upper right side and choose "Jupyter Notebook"
 3. Add your credential to log in.
 4. Choose the server. It is recommended to choose "Earth Observation Tools". 
 
 After successfully log in to Jupyter Notebook, you can now upload the downloaded zip file from Github.
 
-1. In the right sidebar of Jupyter Notebook, choose "Upload"
-2. Open new Terminal 
+1. In the right sidebar of Jupyter Notebook, choose "Upload". Search for the zip file that you just downloaded.
+2. Open new Terminal from File > New >  
 3. Type code below to unzip
 
     ```bash
     unzip imber-sen3-main.zip
     ```
 
-    ![](.resources/Screenshot from 2024-08-04 14-13-06.png)
+    ![](.resources/Screenshot_from_2024-08-04 14-13-06.png)
 4. Enter the extracted directory
    ```bash
    cd main
