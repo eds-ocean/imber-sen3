@@ -165,4 +165,5 @@ cython_debug/
 
 Code/sentinel-3_program/
 Code/gridfile.txt
-Code/Untitled.ipynb
+Code/Untitled*
+!Docs/*.pdf

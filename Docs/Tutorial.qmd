@@ -1,0 +1,208 @@
+---
+title: "Sentinel-3 OLCI L2 Biogeochemistry Data Access Program with Python"
+author: "Edwards Taufiqurrahman"
+institution: "Research Centre for Oceanography BRIN"
+date: "2024-08-01"
+format:
+  beamer:
+    aspectratio: 1610
+    theme: focus
+    slide-level: 3
+    lang: "en-GB"
+    highlight-style: dracula
+pdf-engine: lualatex
+pdf-engine-opts:
+  - '--no-shell-escape'
+dpi: 360
+fontsize: 10pt
+include-in-header:
+  text: |
+    \usepackage[dvipsnames]{xcolor}%
+
+---
+# Introduction
+
+### Sentinel-3 OLCI
+
+Sentinel-3 is part of Copernicus Program, Europe's ambitious remote sensing program aimed to "providing accurate, timely and easily accessible information to improve the management of the environment, understand and mitigate the effects of climate change and ensure civil security,"^[https://sentiwiki.copernicus.eu/web/copernicus-programme]
+
+Sentinel-3 Ocean and Land Colour Instrument (OLCI) collect and provides data to monitor ocean and land geophysical parameters, for example sea surface Chlorophyll-a concentration.
+
+### Sentinel-3 OLCI Usage
+
+![Sentinel-3 OLCI products and application (https://sentiwiki.copernicus.eu/web/olci-applications)](sen3products.png)
+
+### Sentinel-3 Data Access
+
+Data access provided by several organizations. Copernicus' WEkEO and Microsoft's Planetary Computer to name two of them.
+
+::: {#fig-sen3 layout-ncol=2}
+
+![WEkEO](wekeo.png){#fig-wk width="6.5cm"}
+
+![Planetary Computer](plancom.png){#fig-pc width="6.5cm"}
+
+Two example of Sentinel-3 data provider: WEkEO and Planetary Computer
+:::
+
+# Tutorial on Accessing Sentinel-3 OLCI
+
+## Using Github Codespace
+
+### Overview
+
+Python and Github/Jupyterhub can be used to access and open satellite datasets.
+
+:::{.columns .onlytextwidth}
+:::{.column width="54%"}
+
+::: {#fig-cloud layout="[[100],[40,-20,40]]"}
+![Python](python-logo-master-v3-TM.png){#fig-py height="1.9cm"}
+
+![JupyterHub](hublogo.svg){#fig-jp height="1.2cm"}
+
+![Github Codespaces](codespaces.jpg){#fig-gh height="1.2cm"}
+
+Python, Jupyter and Github make it easier to use satellite dataset.
+:::
+
+:::
+
+:::{.column  width="2%"}
+:::
+
+:::{.column  width="44%"}
+
+:::{.callout-note}
+Python is "easy" and reliable.
+
+Cloud infrastructure such as Github Codespace and JupyterHub make it even more easier.
+:::
+
+:::{.callout-caution}
+This tutorial will guide you using **Github Codespaces**
+:::
+
+:::
+
+:::
+
+### Step 1: Create Github Account
+
+:::{.callout-tip title="Steps"}
+Easy. Just go to `https://github.com/signup`
+:::
+
+![](github.png)
+
+### Step 2: Make a Copy of the Code Repository {.allowframebreaks}
+
+
+:::{.callout-tip title="Steps"}
+1. Log-in to your Github \& go to `https://github.com/eds-ocean/imber-sen3`,
+2. Click **\colorbox{ForestGreen}{Fork}**,
+3. Continue as example on the next slide.
+:::
+
+![](create_new_fork_2.jpg){height="6.8cm" fig-align="center"}
+
+### Step 3: Create Github Codespace {.allowframebreaks}
+
+:::{.callout-tip title="Steps"}
+1. On the forked repository, click **\colorbox{ForestGreen}{Code}**, then select tab **\colorbox{CadetBlue}{Codespaces}**,
+2. Click the three dots ($\dots$) and select **\colorbox{CadetBlue}{Manage Codespaces}**,
+3. Click down arrow beside **\colorbox{ForestGreen}{Create codespace on main}** and then select **\colorbox{CadetBlue}{Configure and create codespace}**,
+4. Click **\colorbox{ForestGreen}{Configure and create codespace}** and fill parameter like in the example.
+
+&nbsp;
+
+**(see next slides)**
+:::
+
+![](codespaces0.jpg){width="11cm" fig-align="center"}
+
+![](codespaces_2.jpg){width="11cm" fig-align="center"}
+
+![](codespaces_3.jpg){width="11cm" fig-align="center"}
+
+
+## Running the Code
+
+### Codespace Overview
+
+Github Codespace is an environment to run code from various programming language. By default, it opened in VS-Code web and  screen will open the Readme file in a Jupyter Notebook page. It also provide Terminal to work on Linux command line environment.
+
+We will just use the Terminal, except if you want to prefer you might want to use the Notebook to run the code instead.
+
+### Codespace {.allowframebreaks}
+Default codespace screen
+
+![](Codespace_Default.png){width="13cm" fig-align="center"}
+
+&nbsp;
+
+Click on the arrow to maximize terminal
+
+![](Codespace_Default_1.png){width="13cm" fig-align="center"}
+
+&nbsp;
+
+Maximized terminal screen
+
+![](Codespace_Default_2.png){width="13cm" fig-align="center"}
+
+### Install Conda Environment {.allowframebreaks}
+
+:::{.callout-tip title="Steps"}
+1. Initiate conda,
+2. Restart terminal,
+3. Install conda environment from yml file.
+:::
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+&nbsp;
+
+Type `conda init` to initiate Conda. Wait until finished and then type `exit` to close the Terminal
+
+&nbsp;
+
+![](terminal_1.png){width="13cm" fig-align="center"}
+
+&nbsp;
+
+Open new terminal by clicking `three-lines > Terminal > New Terminal`
+
+![](terminal_2.png){height="5.8cm" fig-align="center"}
+
+&nbsp;
+
+Newly openend terminal. Note that it now have `(base)` on left side.
+
+![](terminal_3.png){width="13cm" fig-align="center"}
+
+&nbsp;
+
+Now type code below,
+
+```{bash}
+conda env create -f Settings/sen3_pc.yml
+```
+
+Wait for it until finished, then type,
+
+```{bash}
+conda activate sen3_pc
+```
