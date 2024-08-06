@@ -2,6 +2,7 @@ name: sen3_wk
 channels:
   - conda-forge
 dependencies:
+  - aiohttp
   - bottleneck
   - cartopy
   - cf_xarray
@@ -14,6 +15,7 @@ dependencies:
   - numpy
   - pip
   - python-cdo
+  - requests
   - rich
   - rioxarray
   - tqdm
