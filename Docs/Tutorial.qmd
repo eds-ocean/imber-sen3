@@ -1,7 +1,7 @@
 ---
 title: "Sentinel-3 OLCI L2 Biogeochemistry Data Access Program with Python"
 author: "Edwards Taufiqurrahman"
-institution: "Research Centre for Oceanography BRIN"
+institutions: "Research Centre for Oceanography BRIN"
 date: "2024-08-01"
 format:
   beamer:
@@ -132,7 +132,7 @@ Easy. Just go to `https://github.com/signup`
 
 Github Codespace is an environment to run code from various programming language. By default, it opened in VS-Code web and  screen will open the Readme file in a Jupyter Notebook page. It also provide Terminal to work on Linux command line environment.
 
-We will just use the Terminal, except if you want to prefer you might want to use the Notebook to run the code instead.
+We will just use the Terminal in this tutorial. Of course you can alway try to use the Notebook to run the code.
 
 ### Codespace {.allowframebreaks}
 Default codespace screen
@@ -195,14 +195,30 @@ Newly openend terminal. Note that it now have `(base)` on left side.
 
 &nbsp;
 
-Now type code below,
+:::{.callout-tip title="Step"}
 
-```{bash}
-conda env create -f Settings/sen3_pc.yml
+1. Now type code below,
+
+  ```{bash}
+  conda env create -f Settings/sen3_pc.yml
+  ```
+
+&nbsp;
+
+2. Wait until finished, then type,
+
+  ```{bash}
+  conda activate sen3_pc
+  ```
+
+:::
+
+### Run the code
+
+:::{.callout-tip title="Step"}
+Type:
+
+```bash
+python Code/mode_1_planetarycomputer.py
 ```
-
-Wait for it until finished, then type,
-
-```{bash}
-conda activate sen3_pc
-```
+:::
