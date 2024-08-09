@@ -1,4 +1,4 @@
-name: sen3_wk
+name: sen3_env
 channels:
   - conda-forge
 dependencies:
@@ -13,11 +13,12 @@ dependencies:
   - matplotlib
   - netcdf4
   - numpy
-  - pip
+  - planetary-computer
+  - pystac-client
   - python-cdo
   - requests
   - rich
   - rioxarray
   - tqdm
   - pip:
-      - hda
+    - hda

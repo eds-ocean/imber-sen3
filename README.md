@@ -16,66 +16,100 @@
 
 </details>
 
-## Introduction
+# Introduction
 
-### Sentinel-3 Data Access
+## Background
+## Program Overview
 
-![alt text](.resources/image-1.png)
+This program created by combining various methods to access, subset, and combine Sentinel-3 netcdf datasets. This include using `xarray` to open and save `netcdf` dataset, using function provided by ... to apply flags, and using `CDO` (link to cdo) to subset and regrid dataset. The flowchart of the process is shown below.
 
-### Pre-requisites
+```mermaid
+flowchart TD;
+A([ Start ])
+B[/ Input location \n of interest. /]
+C[/ Input time \n of interest. /]
+D[Data selected and indexed \n based on input]
+E[Apply Sentinel-3 OLCI \n recommended flags]
 
-This program is intended to be used in a cloud environment e.g. JupyterHub or Github Codespaces. However, you can also run the code in your local machine.
+F(( ))
+G(( ))
+H(( ))
+I(( ))
 
-Please make sure that your cloud or local machine can connect to global internet. For example, you cannot run it in an HPC with access only to local intranet.
+J[ Subsetting to location \n of interest ]
+K{ All indexed dataset \n processed }
+L[ Concatenate data \n by time index ]
+M[ Save data ]
+N([ End ])
 
-In your working machine, you will need to install required modules. Conda environment's yml file is available in `Settings` directory.
+      A-->B-->C-->F;
+      G-->D-->E-->J-->K--NO-->D;
+      K--YES-->H;
+      I-->L-->M-->N
 
-## How To
+```
 
-### First: Copy this repo
+There are two version of this program: PlanetaryComputer and WEkEO version. Differences between these version are:
 
-[Download the zip file](https://github.com/eds-ocean/imber-sen3/archive/refs/heads/main.zip) of this repository and extract it in your preferred machine. If you are familiar with Github, it can be much simpler: you can just fork or clone this repo. 
-
-The next step is to run the code in your preferred machine. We recommend using JupyterHub provided by WEkEO, or using Github Codespace. Detailed information of each method is shown below.
-
-### Using WEkEO JupyterHub
-
-1. Log in to your Wekeo account (please [create account here](https://www.wekeo.eu/register) if you don't have it yet).
-2. Click the Jupyter logo on upper right side and choose "Jupyter Notebook"
-3. Add your credential to log in.
-4. Choose the server. It is recommended to choose "Earth Observation Tools". 
-
-After successfully log in to Jupyter Notebook, you can now upload the downloaded zip file from Github.
-
-1. In the right sidebar of Jupyter Notebook, choose "Upload". Search for the zip file that you just downloaded.
-2. Open new Terminal from File > New >  
-3. Type code below to unzip
-
-    ```bash
-    unzip imber-sen3-main.zip
-    ```
-
-    ![](.resources/Screenshot_from_2024-08-04 14-13-06.png)
-4. Enter the extracted directory
-   ```bash
-   cd main
-   ```
-6. Create a new Python environment. If you want to use PlanetaryComputer, then type:
-   ```bash
-   conda env create -f Settings/sen3_pc.yml
-   ```
-   Otherwise, if you want to use WEkEO HDA, then type;
-   ```bash
-   conda env create -f Settings/sen3_wk.yml
-   ```
-7. s
+| Parameter         | Planetary Computer version      | Wekeo version                | 
+|-------------------|---------------------------------|------------------------------|  
+| Data source       | Planetary Computer by Microsoft | WEkEO by ESA's Copernicus    |
+| Access method     | STAC                            | Harmonized Data Access (HDA) |
+| Processing speed  | Very fast                       | Slow                         |
+| Data availability | Incomplete                    | Complete                     |
+| Credential required | No | Yes|
 
 
-### Using Github Codespace
+As the user, you can choose your preferable methods. For faster process, choose PlanetaryComputer version; but for data completeness you can choose WEkEO version. 
 
-After you're done forking this repo, you can now create codespace to run the code. Go to the forked repo, click the greed `Code` button then click Codespace. 
+Please note that WEkEO requires credential to access their data. If you not yet have WEkEO account, you can create one for free [here](https://www.wekeo.eu/register).
 
-You might want setup the codespace first. To do so, in the Codespace tab click 3-dot (`...`) button and then choose "Manage Codespace" In the right, there is green button and click on left right side of the button (the thing with arrow), then select "Configure and create codespace". Fill the form like below.
+## Pre-requisites
 
-![](.resources/image.png)
+This program written in Python with dependency to following modules:
 
+- aiohttp
+- bottleneck
+- cartopy
+- cf_xarray
+- colormaps
+- dask
+- h5netcdf
+- ipykernel
+- matplotlib
+- netcdf4
+- numpy
+- planetary-computer
+- pystac-client
+- python-cdo
+- requests
+- rich
+- rioxarray
+- tqdm
+- hda (available in `pip`)
+
+If you are using Anaconda, you can use the provided `sen3_env.yml` file available in the `Settings` directory to create a new environment. Use command below in your terminal,
+
+```terminal
+conda env create -f sen3_env.yml
+```
+
+After its done, then you can enter the newly created environment and run the code.
+
+# How To Use the Code
+
+Basically, all you need is to run the file `Mode_1_PlanetaryComputer.py` and `Mode_2_WEkEO.py` from `Code` directory in your working environment. Copy the file to your working directory, enter the `sen3_env` Python environment, and lastly you can type command below in your terminal tu run it. 
+
+```terminal
+python Mode_1_PlanetaryComputer.py
+```
+
+Follow the instructions in the running program to add your location and time of interest. 
+
+Below we provide simple explanation on how to use the code in certain environment.
+
+_tbc_
+
+## Via Github Codespaces
+## Via Google Colab
+## Via Other Cloud/Local Platform
