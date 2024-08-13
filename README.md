@@ -1,7 +1,7 @@
 # Sentinel-3 OLCI Marine Biogeochemistry Data Acquisition Program
 
 <details>
-<summary>📝 Integrated Marine Biosphere Research Group - Research Centre for Oceanography BRIN</summary>
+<summary>📝 Kelompok Riset Biosfer Laut Terintegrasi - Pusat Riset Oseanografi BRIN</summary>
 
 &nbsp;
 
@@ -11,17 +11,19 @@
 | Idha Yulia Ikhsani | Afdal |
 | Lestari | Rachma Puspitasari |
 | Harmesa | Hanif Budi Prayitno |
-| 👨‍🔬 **_Edwards Taufiqurrahman_**  | Ita Wulandari |
+| ✍🏼 **_Edwards Taufiqurrahman_**  | Ita Wulandari |
 | Suci Lastrini | M. T. Kaisupy |
 
 </details>
+
+&nbsp;
 
 # Introduction
 
 ## Background
 ## Program Overview
 
-This program created by combining various methods to access, subset, and combine Sentinel-3 netcdf datasets. This include using `xarray` to open and save `netcdf` dataset, using function provided by ... to apply flags, and using `CDO` (link to cdo) to subset and regrid dataset. The flowchart of the process is shown below.
+This program created by combining various methods to access, subset, and combine Sentinel-3 netcdf datasets. This include using [xarray](https://xarray.dev/) to open and save `netcdf` dataset, using function provided by EUMETSAT to apply Sentinel-3 recommended flags, and using [CDO](https://code.mpimet.mpg.de/projects/cdo/wiki/Cdo%7Brbpy%7D)  to subset and regrid dataset. The flowchart of the process is shown below.
 
 ```mermaid
 flowchart TD;
@@ -49,11 +51,11 @@ N([ End ])
 
 ```
 
-There are two version of this program: PlanetaryComputer and WEkEO version. Differences between these version are:
+There are two version of this program: Mode 1 (PlanetaryComputer) and Mode 2 (WEkEO). Differences between these version are:
 
-| Parameter         | Planetary Computer version      | Wekeo version                | 
+| **Parameter**         | **Mode 1 (Planetary Computer)**      | **Mode 2 (WEkEO)**                | 
 |-------------------|---------------------------------|------------------------------|  
-| Data source       | Planetary Computer by Microsoft | WEkEO by ESA's Copernicus    |
+| Data source       | [Planetary Computer by Microsoft](https://planetarycomputer.microsoft.com/) | [WEkEO by ESA's Copernicus](https://www.wekeo.eu/)    |
 | Access method     | STAC                            | Harmonized Data Access (HDA) |
 | Processing speed  | Fast                       | Slow                         |
 | Data availability | Incomplete                    | Complete                     |
@@ -98,9 +100,9 @@ After the setup done, you can run the program from inside the environment.
 
 # How To Use the Program
 
-1. Copy the `Mode_1_PlanetaryComputer.py` and/or `Mode_2_WEkEO.py` file from `Code` directory to your own working directory,
+1. Copy the `Mode_1_PlanetaryComputer.py` and/or `Mode_2_WEkEO.py` file from **_Code_** directory to your own working directory,
 2. Enter the `sen3_env` Python environment, 
-3. Run the file 
+3. Run the program by typing command below in your terminal:
 
 
 ```terminal
@@ -109,7 +111,9 @@ python Mode_2_WEkEO.py # if using WEKEO
 
 ```
 
-4. Then follow the instructions in the program. 
+4. Then follow the instructions in the program (see video below).
+
+<video controls src="running_program.mp4" title="Title"></video>
 
 
 ## Example for certain platform
@@ -121,18 +125,26 @@ Below we provide simple explanation on how to use the code in certain cloud plat
 Github codespace is a powerfull cloud programming tool provided by Github. We recommend you to use this as it is much easier than others. All you need:
 
 1. Fork or clone this repository to your own Github,
-2. Create Github codespace in forked/cloned repository (recommendation for codespace setup: Use 4 core and 16GB of RAM)
+2. Create Github codespace in forked/cloned repository (recommendation for codespace setup: Use 4 core and 16GB of RAM) 
+
+![Recommended codespace setup.](codespaces_3.jpg)
+
 3. Install required modules,
 4. Run the program.
 5. Download the result to your local computer.
 
+
 ### Via Google Colab
 
-Google Colab is another powerfull tools. The advantage of using it is that you can copy the result to your own Google Drive storage. The step is easy too:
+Google Colab is another powerfull cloud programming tool. The advantage of using Colab is that you can copy the result to your own Google Drive storage. The step is easy too:
 
 1. Clone this repository to Google Colab (by using `git` or download this repository zip file),
 2. Install required modules using `pip`
 3. Run the program
 4. Download the result, or copy it to your Google Drive.
 
-![Video](Docs/running_program.mp4)
+# Acknowledgment
+
+We thanks Microsoft's Planetary Computer and EU Copernicus Programme for providing data access, services, resources and tools.
+
+This program is also part of project in [November 2023 IMBER EO-WPI Workshop in Bali, Indonesia](https://futureearth.org/2024/05/14/novel-mentoring-project-equips-the-next-generation-of-marine-monitoring-scientists/).
