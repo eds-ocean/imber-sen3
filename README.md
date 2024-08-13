@@ -55,18 +55,18 @@ There are two version of this program: PlanetaryComputer and WEkEO version. Diff
 |-------------------|---------------------------------|------------------------------|  
 | Data source       | Planetary Computer by Microsoft | WEkEO by ESA's Copernicus    |
 | Access method     | STAC                            | Harmonized Data Access (HDA) |
-| Processing speed  | Very fast                       | Slow                         |
+| Processing speed  | Fast                       | Slow                         |
 | Data availability | Incomplete                    | Complete                     |
 | Credential required | No | Yes|
 
 
-As the user, you can choose your preferable methods. For faster process, choose PlanetaryComputer version; but for data completeness you can choose WEkEO version. 
+As the user, you can choose your preferred version. For faster process, choose PlanetaryComputer version; but for data completeness you can choose WEkEO version. 
 
 Please note that WEkEO requires credential to access their data. If you not yet have WEkEO account, you can create one for free [here](https://www.wekeo.eu/register).
 
 ## Pre-requisites
 
-This program written in Python with dependency to following modules:
+This program written in Python with dependency on following modules:
 
 - aiohttp
 - bottleneck
@@ -88,28 +88,51 @@ This program written in Python with dependency to following modules:
 - tqdm
 - hda (available in `pip`)
 
-If you are using Anaconda, you can use the provided `sen3_env.yml` file available in the `Settings` directory to create a new environment. Use command below in your terminal,
+If you are using Anaconda, you can use the provided `sen3_env.yml` file available in the `Settings` directory to create a new environment. Use command below in your terminal to setup the environment,
 
 ```terminal
 conda env create -f sen3_env.yml
 ```
 
-After its done, then you can enter the newly created environment and run the code.
+After the setup done, you can run the program from inside the environment.
 
-# How To Use the Code
+# How To Use the Program
 
-Basically, all you need is to run the file `Mode_1_PlanetaryComputer.py` and `Mode_2_WEkEO.py` from `Code` directory in your working environment. Copy the file to your working directory, enter the `sen3_env` Python environment, and lastly you can type command below in your terminal tu run it. 
+1. Copy the `Mode_1_PlanetaryComputer.py` and/or `Mode_2_WEkEO.py` file from `Code` directory to your own working directory,
+2. Enter the `sen3_env` Python environment, 
+3. Run the file 
+
 
 ```terminal
-python Mode_1_PlanetaryComputer.py
+python Mode_1_PlanetaryComputer.py # if using PlanetaryComputer
+python Mode_2_WEkEO.py # if using WEKEO
+
 ```
 
-Follow the instructions in the running program to add your location and time of interest. 
+4. Then follow the instructions in the program. 
 
-Below we provide simple explanation on how to use the code in certain environment.
 
-_tbc_
+## Example for certain platform
 
-## Via Github Codespaces
-## Via Google Colab
-## Via Other Cloud/Local Platform
+Below we provide simple explanation on how to use the code in certain cloud platforms.
+
+### Via Github Codespaces
+
+Github codespace is a powerfull cloud programming tool provided by Github. We recommend you to use this as it is much easier than others. All you need:
+
+1. Fork or clone this repository to your own Github,
+2. Create Github codespace in forked/cloned repository (recommendation for codespace setup: Use 4 core and 16GB of RAM)
+3. Install required modules,
+4. Run the program.
+5. Download the result to your local computer.
+
+### Via Google Colab
+
+Google Colab is another powerfull tools. The advantage of using it is that you can copy the result to your own Google Drive storage. The step is easy too:
+
+1. Clone this repository to Google Colab (by using `git` or download this repository zip file),
+2. Install required modules using `pip`
+3. Run the program
+4. Download the result, or copy it to your Google Drive.
+
+![Video](Docs/running_program.webm)
