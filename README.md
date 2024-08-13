@@ -135,4 +135,4 @@ Google Colab is another powerfull tools. The advantage of using it is that you c
 3. Run the program
 4. Download the result, or copy it to your Google Drive.
 
-![Video](Docs/running_program.webm)
+![Video](Docs/running_program.mp4)
