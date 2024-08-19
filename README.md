@@ -21,6 +21,20 @@
 # Introduction
 
 ## Background
+
+Sentinel-3 is a satellite system jointly operated by ESA and EUMETSAT to deliver operational ocean and land observation services. From [it's wiki](https://sentiwiki.copernicus.eu/web/s3-mission), is described as follow:
+
+> Sentinel-3 is an European Earth Observation satellite mission developed to support Copernicus ocean, land, atmospheric, emergency, security and cryospheric applications.
+> The main objective of Sentinel-3 is to measure sea surface topography, sea and land surface temperature, and ocean and land surface colour with high accuracy and reliability to support ocean forecasting systems, environmental monitoring and climate monitoring. Sentinel-3 observations also support applications based on vegetation as well as fire, inland waters (river and lake water surface height), the cryosphere (i.e., land ice and sea-ice thickness) and atmosphere.
+
+Sentinel-3 bring multiple type of sensors:
+1. SLSTR (Sea and Land Surface Temperature Radiometer) to acquire global sea surface temperature,
+2. OLCI (Ocean and Land Colour Instrument) to measure optical absorptions, useful to determine chlorophyll-a and organic matters concentration,
+3. SRAL (Synthetic Aperture Radar Altimeter) to measure topography profiles over ocean, rivers and lakes.
+4. Other supporting sensor such as DORIS (Doppler Orbitography and Radiopositioning Integrated by Satellite), MWR (MicroWave Radiometer), LRR (Laser retroreflector), GNSS (Global Navigation Satellite System)
+
+Sentinel-3A was launched on 16 February 2016 and Sentinel-3B was launched on 25 April 2018.
+
 ## Program Overview
 
 This program created by combining various methods to access, subset, and combine Sentinel-3 netcdf datasets. This include using [xarray](https://xarray.dev/) to open and save `netcdf` dataset, using function provided by EUMETSAT to apply Sentinel-3 recommended flags, and using [CDO](https://code.mpimet.mpg.de/projects/cdo/wiki/Cdo%7Brbpy%7D)  to subset and regrid dataset. The flowchart of the process is shown below.
