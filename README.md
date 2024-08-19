@@ -138,7 +138,7 @@ Github codespace is a powerfull cloud programming tool provided by Github. We re
 
 Google Colab is another powerfull cloud programming tool. The advantage of using Colab is that you can copy the result to your own Google Drive storage. The step is easy too:
 
-1. Clone this repository to Google Colab (by using `git` or download this repository zip file),
+1. Clone this repository to Google Colab (by using `git` or download this repository's zip file),
 2. Install required modules using `pip`
 3. Run the program
 4. Download the result, or copy it to your Google Drive.
