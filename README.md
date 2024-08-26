@@ -10,9 +10,10 @@
 | Faisal Hamzah | A'an J. Wahyudi |
 | Idha Yulia Ikhsani | Afdal |
 | Lestari | Rachma Puspitasari |
-| Harmesa | Hanif Budi Prayitno |
-| ✍🏼 **_Edwards Taufiqurrahman_**  | Ita Wulandari |
-| Suci Lastrini | M. T. Kaisupy |
+| Camellia K. Tito| Harmesa | 
+| Hanif Budi Prayitno | ✍🏼 **_Edwards Taufiqurrahman_**  | 
+| Ita Wulandari | Suci Lastrini |
+| M. T. Kaisupy | |
 
 </details>
 
