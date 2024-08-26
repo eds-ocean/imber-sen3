@@ -13,6 +13,7 @@ dependencies:
   - matplotlib
   - netcdf4
   - numpy
+  - pip
   - planetary-computer
   - pystac-client
   - python-cdo
