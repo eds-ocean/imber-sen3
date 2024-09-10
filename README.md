@@ -150,7 +150,7 @@ Langkah yang harus dilakukan untuk menjalankan program dengan Github Codespace:
       $ python Code/mode_1_planetarycomputer.py
       ```
 
-# Ucapan Kerima Kasih
+# Ucapan Terima Kasih
 
 1. Anggota Kelompok Riset Biosfer Laut Terintegrasi BRIN. 
 
