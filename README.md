@@ -72,9 +72,9 @@ Secara umum, penggunaan program untuk semua platform dapat dilakukan dengan lang
 4. Masuk ke direktori **Code** dengan menggunakan Terminal.
 5. Jalankan program melalui terminal dengan mengetikkan perintah berikut:
   
-   ```console
-   $ python Mode_1_PlanetaryComputer.py 
-   ```
+      ```console
+      $ python Mode_1_PlanetaryComputer.py 
+      ```
 
 6. Ikuti instruksi yang diberikan pada program.
 
@@ -90,28 +90,28 @@ Untuk menjalankan program menggunakan WEkEO JupyterHub, gunakan langkah berikut:
 1. Masuk (*log-in*) ke akun WEkEO dan jalankan JupyterHub. Pengguna akan masuk ke perangkat Jupyter Notebook pada perambah (*browser*)
 2. Buka Terminal dari Jupyter Notebook dan lakukan *clone* repositori program ini.
 
-    ```console
-    $ git clone https://github.com/eds-ocean/imber-sen3.git
-    ```
+      ```console
+      $ git clone https://github.com/eds-ocean/imber-sen3.git
+      ```
 
 3. Masuk ke direktori `imber-sen3` yang baru saja di-*clone*.
 
-    ```console
-    $ cd imber-sen3
-    ```
+      ```console
+      $ cd imber-sen3
+      ```
 
 4. Buat *python environment* menggunakan Conda (seperti pada @sec-kebutuhan). Setelah itu aktifkan environment tersebut.
 
-    ```console
-    $ conda create env -f Settings/sen3_env.yml
-    $ conda activate sen3_env
-    ```
+      ```console
+      $ conda create env -f Settings/sen3_env.yml
+      $ conda activate sen3_env
+      ```
 
 5. Jalankan program
 
-    ```console
-    $ python Code/Mode_1_PlanetaryComputer.py
-    ```
+      ```console
+      $ python Code/Mode_1_PlanetaryComputer.py
+      ```
 
 ### Menggunakan Github Codespaces
 
@@ -121,31 +121,34 @@ Langkah yang harus dilakukan untuk menjalankan program dengan Github Codespace:
 
 1. Pengguna masuk (*log-in*) ke akun Github, dan selanjutnya kunjungi repositori program ini.
 2. Lakukan _fork_ repositori Github program ini ke akun Github pengguna. Pengguna dapat terlebih dahulu mempelajari tentang membuat *fork* dari 
-3. Masuk ke repositori hasil _fork_, dan buat codespace (lihat @fig-rekomendasicodea). Rekomendasi untuk codespace adalah 4 core, 16GB RAM, menggunakan server West Europe seperti ditampilkan pada @fig-rekomendasicodeb. 
+3. Masuk ke repositori hasil _fork_, dan buat codespace (lihat gambar di bawah).  
 
-![Pembuatan Codespace.](docs/img/codespaces_1.png){#fig-rekomendasicodea}
+      ![Pembuatan Codespace.](docs/img/codespaces_1.jpg)
 
-![Pengaturan Codespace.](docs/img/codespaces_3.jpg){#fig-rekomendasicodeb}
+      Rekomendasi untuk codespace adalah 4 core, 16GB RAM, menggunakan server West Europe seperti ditampilkan pada gambar berikut.
+
+      ![Pengaturan Codespace.](docs/img/codespaces_3.jpg)
 
 3. Jika Codespace telah berjalan, akan ditampilkan VSCode versi web pada perambah (*browser*). Buka Terminal pada VSCode Web tersebut dan aktifkan Anaconda. 
 
-    ```console
-    $ conda init
-    ```
-    Setelah itu, tutup Terminal dan buka Terminal baru.
+      ```console
+      $ conda init
+      ```
+
+      Setelah itu, tutup Terminal dan buka Terminal baru.
 
 4. Pada Terminal yang baru ditampilakn, buat *Python environment* menggunakan Conda (seperti pada @sec-kebutuhan). Setelah itu aktifkan *environment* tersebut.
 
-    ```console
-    $ conda create env -f Settings/sen3_env.yml
-    $ conda activate sen3_env
-    ```
+      ```console
+      $ conda create env -f Settings/sen3_env.yml
+      $ conda activate sen3_env
+      ```
 
 5. Jalankan program
 
-    ```console
-    $ python Code/mode_1_planetarycomputer.py
-    ```
+      ```console
+      $ python Code/mode_1_planetarycomputer.py
+      ```
 
 # Ucapan Kerima Kasih
 
