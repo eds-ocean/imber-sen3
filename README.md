@@ -1,165 +1,166 @@
-# Sentinel-3 OLCI Marine Biogeochemistry Data Acquisition Program
+# Program Akses Parameter Biogeokimia dari Dataset Sentinel-3 OLCI
 
-<details>
-<summary>📝 Kelompok Riset Biosfer Laut Terintegrasi - Pusat Riset Oseanografi BRIN</summary>
+## Latar Belakang
 
-&nbsp;
+Sentinel-3 merupakan sistem penginderaan jauh untuk pengamatan bumi (_earth observation_) yang dikelola bersama oleh *European Organisation for the Exploitation of Meterological Satellites* (EUMETSAT) dan *European Space Agency* (ESA). Berdasarkan informasi dari *website*-nya, tujuan utama dari misi satelit Sentinel-3 adalah untuk pengukuran topografi permukaan darat dan laut, temperatur permukaan bumi serta parameter optik permukaan bumi secara akurat. Produk dari Sentinel-3 dapat digunakan untuk pemantauan kondisi lingkungan dan iklim, di darat maupun di laut.
 
-| Member Name | Member Name | 
-|:-------------|:-------------|
-| Faisal Hamzah | A'an J. Wahyudi |
-| Idha Yulia Ikhsani | Afdal |
-| Lestari | Rachma Puspitasari |
-| Camellia K. Tito| Harmesa | 
-| Hanif Budi Prayitno | ✍🏼 **_Edwards Taufiqurrahman_**  | 
-| Ita Wulandari | Suci Lastrini |
-| M. T. Kaisupy | |
+Salah satu sensor yang digunakan pada Sentinel-3 adalah *Ocean and Land Colour Instrument* (OLCI). Produk dari sensor ini berupa absorpsi optik yang bisa diturunkan untuk memperkiran kandungan klorofil-a dan material terlarut di permukaan laut, danau maupun sungai. Dataset OLCI level 2 memiliki resolusi tinggi hingga 300 m. Dengan resolusi ini, dataset OLCI bisa digunakan secara akurat termasuk untuk lingkup area yang kecil, misalnya untuk kawasan pesisir.
 
-</details>
+Data Sentinel-3 didistribusikan secara luas dan gratis oleh berbagai platform, termasuk oleh Planetary Computer milik Microsoft. Data dapat diakses dengan cara mengunduh secara langsung, menggunakan perangkat lunak kebumian seperti ArcGIS atau QGIS, serta dengan menggunakan bahasa pemrograman. Akses data dengan menggunakan bahasa pemrograman relatif lebih menguntungkan karena fitur-fitur pada dataset dapat digunakan secara optimal sesuai dengan kebutuhan. 
 
-&nbsp;
+Dengan menggunakan bahasa Python, program ini dibuat dengan memanfaatkan fitur yang tersedia pada dataset, termasuk untuk memilih data berdasarkan lokasi dan waktu. Dengan program ini, pengguna dapat dengan mudah melakukan pengunduhan data sesuai dengan kebutuhannya, tidak perlu mengunduh data satu per satu, serta tidak perlu melakukan pemrosesan dasar seperti penerapan _flags_ dan penggabungan berbasis waktu. 
 
-# Introduction
+## Tujuan dan Manfaat Program
 
-## Background
+Program komputer ini dibuat untuk tujuan sebagai berikut:
 
-Sentinel-3 is a satellite system jointly operated by ESA and EUMETSAT to deliver operational ocean and land observation services. From [it's wiki](https://sentiwiki.copernicus.eu/web/s3-mission), is described as follow:
+1. Mempermudah proses akuisisi data satelit Sentinel-3 OLCI terutama untuk parameter optik dan turunannya, yaitu klorofil-a dan total material tersuspensi (*total suspended matter*/TSM).
+2. Mendapatkan data satelit untuk parameter optik laut dengan format standar, yang dapat dianalisis menggunakan perangkat lunak yang umum di bidang kebumian dan oseanografi.
 
-> Sentinel-3 is an European Earth Observation satellite mission developed to support Copernicus ocean, land, atmospheric, emergency, security and cryospheric applications.
-> The main objective of Sentinel-3 is to measure sea surface topography, sea and land surface temperature, and ocean and land surface colour with high accuracy and reliability to support ocean forecasting systems, environmental monitoring and climate monitoring. Sentinel-3 observations also support applications based on vegetation as well as fire, inland waters (river and lake water surface height), the cryosphere (i.e., land ice and sea-ice thickness) and atmosphere.
+Program ini diharapkan dapat dimanfaatkan kalangan peneliti, dosen dan mahasiswa bidang kelautan yang memerlukan data satelit Sentinel-3. Dengan menggunakan program ini, pengguna bisa mendapatkan data Sentinel-3 dengan relatif mudah dan waktu akuisisi data yang lebih singkat.
 
-Sentinel-3 bring multiple type of sensors:
-1. SLSTR (Sea and Land Surface Temperature Radiometer) to acquire global sea surface temperature,
-2. OLCI (Ocean and Land Colour Instrument) to measure optical absorptions, useful to determine chlorophyll-a and organic matters concentration,
-3. SRAL (Synthetic Aperture Radar Altimeter) to measure topography profiles over ocean, rivers and lakes.
-4. Other supporting sensor such as DORIS (Doppler Orbitography and Radiopositioning Integrated by Satellite), MWR (MicroWave Radiometer), LRR (Laser retroreflector), GNSS (Global Navigation Satellite System)
-
-Sentinel-3A was launched on 16 February 2016 and Sentinel-3B was launched on 25 April 2018.
-
-## Program Overview
-
-This program created by combining various methods to access, subset, and combine Sentinel-3 netcdf datasets. This include using [xarray](https://xarray.dev/) to open and save `netcdf` dataset, using function provided by EUMETSAT to apply Sentinel-3 recommended flags, and using [CDO](https://code.mpimet.mpg.de/projects/cdo/wiki/Cdo%7Brbpy%7D)  to subset and regrid dataset. The flowchart of the process is shown below.
+## Algoritma Program
 
 ```mermaid
 flowchart TD;
 A([ Start ])
-B[/ Input location \n of interest. /]
-C[/ Input time \n of interest. /]
-D[Data selected and indexed \n based on input]
-E[Apply Sentinel-3 OLCI \n recommended flags]
+B[/ Masukkan data lokasi \n yang diinginkan. /]
+C[/ Masukkan data waktu \n yang diinginkan. /]
+W(( ))
+X(( ))
+D[ Data dipilih berdasarkan informasi \n lokasi dan waktu. ]
+E[ Pembersihan data dengan \n Sentinel-3 OLCI recommended flags]
+F[ Pemotongan data \n sesuai lokasi. ]
+G{ Semua data terpilih \n telah diproses. }
+Y(( ))
+Z(( ))
+H[ Penggabungan data \n sesuai indeks waktu. ]
+I[ Data disimpan. ]
+J([ End ])
 
-F(( ))
-G(( ))
-H(( ))
-I(( ))
-
-J[ Subsetting to location \n of interest ]
-K{ All indexed dataset \n processed }
-L[ Concatenate data \n by time index ]
-M[ Save data ]
-N([ End ])
-
-      A-->B-->C-->F;
-      G-->D-->E-->J-->K--NO-->D;
-      K--YES-->H;
-      I-->L-->M-->N
-
+A-->B-->C-->W;
+X-->D-->E-->F-->G--BELUM-->D;
+G--SUDAH-->Y;
+Z-->H-->I-->J
 ```
 
-There are two version of this program: Mode 1 (PlanetaryComputer) and Mode 2 (WEkEO). Differences between these version are:
+## Kebutuhan Modul Python
 
-| **Parameter**         | **Mode 1 (Planetary Computer)**      | **Mode 2 (WEkEO)**                | 
-|-------------------|---------------------------------|------------------------------|  
-| Data source       | [Planetary Computer by Microsoft](https://planetarycomputer.microsoft.com/) | [WEkEO by ESA's Copernicus](https://www.wekeo.eu/)    |
-| Access method     | STAC                            | Harmonized Data Access (HDA) |
-| Processing speed  | Fast                       | Slow                         |
-| Data availability | Incomplete                    | Complete                     |
-| Credential required | No | Yes|
+> [!TIP]
+> Modul Python yang digunakan untuk menjalankan program tersedia pada repositori Anaconda, kecuali untuk HDA tersedia melalui pypi (pip).
 
+|Nama modul                         | Nama modul      |
+|:----------------------------------|:----------------|
+| aiohttp                           | bottleneck      |
+| cartopy                           | cf_xarray       |
+| colormaps                         | dask            |
+| h5netcdf                          | ipykernel       |
+| matplotlib                        | netcdf4         |
+| numpy                             | pip             |
+| planetary-computer                | pystac-client   |
+| requests                          | rich            |
+| rioxarray                         | tqdm            |
+| hda _(tersedia melalui `pip`)_    |                 |
 
-As the user, you can choose your preferred version. For faster process, choose PlanetaryComputer version; but for data completeness you can choose WEkEO version. 
+## Penggunaan Dasar
 
-Please note that WEkEO requires credential to access their data. If you not yet have WEkEO account, you can create one for free [here](https://www.wekeo.eu/register).
+Secara umum, penggunaan program untuk semua platform dapat dilakukan dengan langkah-langkah berikut:
 
-## Pre-requisites
+1. Kunjungi repositori program di Github [`https://github.com/eds-ocean/imber-sen3`](https://github.com/eds-ocean/imber-sen3).
+2. Unduh berkas yang ada pada repositori dan lakukan ekstraksi di lingkungan kerja yang diinginkan (disarankan pada sistem komputasi awan seperti JupyterHub).
+3. Dengan menggunakan Terminal, masuk ke *environment* Python yang telah dibuat sesuai langkah pada @sec-kebutuhan (misalnya `sen3_env`).
+4. Masuk ke direktori **Code** dengan menggunakan Terminal.
+5. Jalankan program melalui terminal dengan mengetikkan perintah berikut:
+  
+   ```console
+   $ python Mode_1_PlanetaryComputer.py 
+   ```
 
-This program written in Python with dependency on following modules:
+6. Ikuti instruksi yang diberikan pada program.
 
-- aiohttp
-- bottleneck
-- cartopy
-- cf_xarray
-- colormaps
-- dask
-- h5netcdf
-- ipykernel
-- matplotlib
-- netcdf4
-- numpy
-- planetary-computer
-- pystac-client
-- python-cdo
-- requests
-- rich
-- rioxarray
-- tqdm
-- hda (available in `pip`)
+> [!IMPORTANT]
+> Program ini optimal untuk digunakan pada sistem komputasi awan seperti JupyterHub, Github Codespace, Google Colab dan lain-lain. Penggunaan pada komputer lokal bisa dilakukan, namun program memerlukan *resource* komputer dan *bandwidth* internet yang cukup besar.
 
-If you are using Anaconda, you can use the provided `sen3_env.yml` file available in the `Settings` directory to create a new environment. Use command below in your terminal to setup the environment,
+### Menggunakan WEkEO JupyterHub
 
-```terminal
-conda env create -f sen3_env.yml
-```
+WEKEO JupyterHub merupakan layanan yang disediakan oleh Copernicus untuk keperluan analisis data. Layanan ini dapat digunakan secara gratis, cukup hanya dengan membuat akun. Lebih lanjut mengenai hal ini dapat dilihat pada [`https://help.wekeo.eu/en/articles/6337538-what-is-the-wekeo-jupyterhub`](https://help.wekeo.eu/en/articles/6337538-what-is-the-wekeo-jupyterhub).
 
-After the setup done, you can run the program from inside the environment.
+Untuk menjalankan program menggunakan WEkEO JupyterHub, gunakan langkah berikut:
 
-# How To Use the Program
+1. Masuk (*log-in*) ke akun WEkEO dan jalankan JupyterHub. Pengguna akan masuk ke perangkat Jupyter Notebook pada perambah (*browser*)
+2. Buka Terminal dari Jupyter Notebook dan lakukan *clone* repositori program ini.
 
-1. Copy the `Mode_1_PlanetaryComputer.py` and/or `Mode_2_WEkEO.py` file from **_Code_** directory to your own working directory,
-2. Enter the `sen3_env` Python environment, 
-3. Run the program by typing command below in your terminal:
+    ```console
+    $ git clone https://github.com/eds-ocean/imber-sen3.git
+    ```
 
+3. Masuk ke direktori `imber-sen3` yang baru saja di-*clone*.
 
-```terminal
-python Mode_1_PlanetaryComputer.py # if using PlanetaryComputer
-python Mode_2_WEkEO.py # if using WEKEO
+    ```console
+    $ cd imber-sen3
+    ```
 
-```
+4. Buat *python environment* menggunakan Conda (seperti pada @sec-kebutuhan). Setelah itu aktifkan environment tersebut.
 
-4. Then follow the instructions in the program (see video below).
+    ```console
+    $ conda create env -f Settings/sen3_env.yml
+    $ conda activate sen3_env
+    ```
 
-<video controls src="running_program.mp4" title="Title"></video>
+5. Jalankan program
 
+    ```console
+    $ python Code/Mode_1_PlanetaryComputer.py
+    ```
 
-## Example for certain platform
+### Menggunakan Github Codespaces
 
-Below we provide simple explanation on how to use the code in certain cloud platforms.
+Github Codespace merupakan perangkat komputasi awan yang disediakan oleh Github. Pengguna dapa menggunakan codespace untuk menjalankan program secara daring dan tidak perlu melakukan instalasi di komputer lokal. Penggunaan codespace ini merupakan metode yang paling direkomendasikan.
 
-### Via Github Codespaces
+Langkah yang harus dilakukan untuk menjalankan program dengan Github Codespace:
 
-Github codespace is a powerfull cloud programming tool provided by Github. We recommend you to use this as it is much easier than others. All you need:
+1. Pengguna masuk (*log-in*) ke akun Github, dan selanjutnya kunjungi repositori program ini.
+2. Lakukan _fork_ repositori Github program ini ke akun Github pengguna. Pengguna dapat terlebih dahulu mempelajari tentang membuat *fork* dari 
+3. Masuk ke repositori hasil _fork_, dan buat codespace (lihat @fig-rekomendasicodea). Rekomendasi untuk codespace adalah 4 core, 16GB RAM, menggunakan server West Europe seperti ditampilkan pada @fig-rekomendasicodeb. 
 
-1. Fork or clone this repository to your own Github,
-2. Create Github codespace in forked/cloned repository (recommendation for codespace setup: Use 4 core and 16GB of RAM) 
+![Pembuatan Codespace.](docs/img/codespaces_1.png){#fig-rekomendasicodea}
 
-![Recommended codespace setup.](codespaces_3.jpg)
+![Pengaturan Codespace.](docs/img/codespaces_3.jpg){#fig-rekomendasicodeb}
 
-3. Install required modules,
-4. Run the program.
-5. Download the result to your local computer.
+3. Jika Codespace telah berjalan, akan ditampilkan VSCode versi web pada perambah (*browser*). Buka Terminal pada VSCode Web tersebut dan aktifkan Anaconda. 
 
+    ```console
+    $ conda init
+    ```
+    Setelah itu, tutup Terminal dan buka Terminal baru.
 
-### Via Google Colab
+4. Pada Terminal yang baru ditampilakn, buat *Python environment* menggunakan Conda (seperti pada @sec-kebutuhan). Setelah itu aktifkan *environment* tersebut.
 
-Google Colab is another powerfull cloud programming tool. The advantage of using Colab is that you can copy the result to your own Google Drive storage. The step is easy too:
+    ```console
+    $ conda create env -f Settings/sen3_env.yml
+    $ conda activate sen3_env
+    ```
 
-1. Clone this repository to Google Colab (by using `git` or download this repository's zip file),
-2. Install required modules using `pip`
-3. Run the program
-4. Download the result, or copy it to your Google Drive.
+5. Jalankan program
 
-# Acknowledgment
+    ```console
+    $ python Code/mode_1_planetarycomputer.py
+    ```
 
-We thanks Microsoft's Planetary Computer and EU Copernicus Programme for providing data access, services, resources and tools.
+# Ucapan Kerima Kasih
 
-This program is also part of project in [November 2023 IMBER EO-WPI Workshop in Bali, Indonesia](https://futureearth.org/2024/05/14/novel-mentoring-project-equips-the-next-generation-of-marine-monitoring-scientists/).
+1. Anggota Kelompok Riset Biosfer Laut Terintegrasi BRIN. 
+
+| Nama anggota          | Nama anggota                |
+|:----------------------|:----------------------------| 
+| Faisal Hamzah         | A'an J. Wahyudi             |
+| Idha Yulia Ikhsani    | Afdal                       |
+| Lestari               | Rachma Puspitasari          |
+| Camellia K. Tito      | Harmesa                     |
+| Hanif Budi Prayitno   | Edwards Taufiqurrahman      |
+| Ita Wulandari         | Suci Lastrini               |
+| M. T. Kaisupy         |                             |
+
+2. Microsoft's Planetary Computer dan EU Copernicus Programme untuk _data access_, layanan, serta tutorial pengolahan data satelit Sentinel-3.
+
+3. Program ini merupakan kelanjutan dari _project_ yang diinisiasi pada [IMBeR EO-WPI Workshop di Bali, Indonesia, November 2023](https://futureearth.org/2024/05/14/novel-mentoring-project-equips-the-next-generation-of-marine-monitoring-scientists/).
