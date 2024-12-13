@@ -1,4 +1,9 @@
-# %%
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
 import os, shutil, gc, glob
 
 import planetary_computer
@@ -39,7 +44,10 @@ warnings.filterwarnings('ignore')
 
 from tqdm.auto import tqdm
 
-# %%
+
+# In[2]:
+
+
 download_dir = os.path.join(os.getcwd(),"sentinel-3_program","downloaded-data")
 result_dir = os.path.join(os.getcwd(),"sentinel-3_program","processed-data")
 
@@ -57,7 +65,10 @@ clearres = [f for f in clearres if "Sen-3" not in f]
 for file in clearres:
     os.remove(file)
 
-# %%
+
+# In[3]:
+
+
 list_flags_common = ['LAND','INLAND_WATER','COASTLINE','CLOUD','CLOUD_AMBIGUOUS','CLOUD_MARGIN','INVALID','COSMETIC','SATURATED','SUSPECT','HISOLZEN','HIGHGLINT','SNOW_ICE']
 list_flags_process = ['AC_FAIL','WHITECAPS','ADJAC','RWNEG_O2','RWNEG_O3','RWNEG_O4','RWNEG_O5','RWNEG_O6','RWNEG_O7','RWNEG_O8']
 list_flags_oc4me = ['OC4ME_FAIL','TIDAL']
@@ -77,7 +88,9 @@ def flag_data_fast(list_flag, flag_names, flag_values, flag_data, flag_type='WQS
     return (flag_data & flag_bits) > 0			
 
 
-# %%
+# In[4]:
+
+
 time.sleep(1)
 os.system('cls' if os.name == 'nt' else 'clear') 
 
@@ -94,7 +107,9 @@ west = float(input('West point: ')) # 112.66
 east = float(input('East point: ')) # 114.65
 
 
-# %%
+# In[5]:
+
+
 area_of_interest = {
     "type": "Polygon",
     "coordinates": [
@@ -129,7 +144,10 @@ east_str = format_coordinate(east, is_latitude=False)
 
 geostr = f"{north_str}_{south_str}_{west_str}_{east_str}"
 
-# %%
+
+# In[6]:
+
+
 # Create a dummy dataset based on the area of interest
 resolution = 300
 resolution_degrees = resolution / 111320
@@ -179,7 +197,10 @@ with open(gridfile, 'w') as f:
 ds.close()
 gc.collect()
 
-# %%
+
+# In[7]:
+
+
 time.sleep(1)
 os.system('cls' if os.name == 'nt' else 'clear') 
 
@@ -198,7 +219,10 @@ dtend = input('Time end: ')
 
 time_of_interest = f"{dtstart}/{dtend}"
 
-# %%
+
+# In[8]:
+
+
 time.sleep(1)
 os.system('cls' if os.name == 'nt' else 'clear') 
 
@@ -231,13 +255,19 @@ while True:
     else:
         print("You put wrong number. Please try again!")
 
-# %%
+
+# In[9]:
+
+
 catalog = pystac_client.Client.open("https://planetarycomputer.microsoft.com/api/stac/v1", modifier=planetary_computer.sign_inplace)
 search = catalog.search(collections=["sentinel-3-olci-wfr-l2-netcdf"], intersects=area_of_interest, datetime=time_of_interest)
 
 items = search.item_collection()
 
-# %%
+
+# In[10]:
+
+
 table = Table(title = "Summary")
 
 table.add_column("Released", justify="left", style="cyan", no_wrap=True)
@@ -251,7 +281,10 @@ table.add_row(f"last dataset",f"{items[0].properties['datetime']}")
 
 console.print(table)
 
-# %%
+
+# In[11]:
+
+
 print()
 
 for i in range(3, 0, -1):
@@ -289,7 +322,7 @@ for index, item in tqdm(enumerate(items, start=1), desc="Processing: ", total = 
         if parameters == 1:
             keys = ["chl-nn","tsm-nn","chl-oc4me"]
             for k in keys:
-                if not k == 'chl_oc4me':
+                if not k == 'chl-oc4me':
                     list_flags = list_flags_common + list_flags_ocnn
                 else:
                     list_flags = list_flags_common + list_flags_process + list_flags_oc4me
@@ -312,7 +345,7 @@ for index, item in tqdm(enumerate(items, start=1), desc="Processing: ", total = 
                 del dtarr
         
         elif parameters == 2:
-            keys = ['Oa01-reflectance','Oa02-reflectance','Oa03-reflectance','Oa04-reflectance','Oa05-reflectance','Oa06-reflectance','Oa07-reflectance','Oa08-reflectance','Oa09-reflectance','Oa10-reflectance','Oa11-reflectance','Oa12-reflectance','Oa16-reflectance','Oa17-reflectance','Oa18-reflectance','Oa21-reflectance']
+            keys = ['oa01-reflectance','oa02-reflectance','oa03-reflectance','oa04-reflectance','oa05-reflectance','oa06-reflectance','oa07-reflectance','oa08-reflectance','oa09-reflectance','oa10-reflectance','oa11-reflectance','oa12-reflectance','oa16-reflectance','oa17-reflectance','oa18-reflectance','oa21-reflectance']
             list_flags = list_flags_common + list_flags_process
             for k in keys:
                 ds = xr.open_dataset(fsspec.open(item.assets[k].href).open())
@@ -383,7 +416,10 @@ for index, item in tqdm(enumerate(items, start=1), desc="Processing: ", total = 
     except:
         continue
 
-# %%
+
+# In[12]:
+
+
 console.log(f'Combining dataset.')
 
 files = glob.glob(os.path.join(result_dir , f'S3*{nick}.nc'))
@@ -414,7 +450,10 @@ console.print(Markdown(md_end))
 
 time.sleep(5)
 
-# %%
+
+# In[13]:
+
+
 files_to_delete = glob.glob(os.path.join(result_dir, "*.nc"))
 files_to_delete = [f for f in files_to_delete if "Sen-3" not in f]
 
@@ -422,8 +461,4 @@ for file in files_to_delete:
     os.remove(file)
 
 #display(ds)
-
-# %%
-
-
 
